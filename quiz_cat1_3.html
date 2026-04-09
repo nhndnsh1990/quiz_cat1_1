@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-3 情報に関する理論 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:36px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">1-3 情報に関する理論</div>
+  <div class="header-meta">63問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 1-3</div>
+    <div class="start-title">情報に関する理論</div>
+    <div class="start-sub">基礎理論 ／ 63問収録</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">63</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">63問すべてに挑戦</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 63</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag">1-3 情報に関する理論</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:"1-3-01",term:"通信路符号化",
+   statement:"通信路符号化とはデータに冗長情報を付加して誤りを検出・訂正する技術であり、ハミング符号やQRコードなどがその例である。",
+   answer:true,
+   explanation:"その通りです。通信路符号化（チャネル符号化）はノイズの多い通信環境でもデータの信頼性を確保するためにチェックビットなどの冗長情報を付加する技術です。"},
+  {id:"1-3-02",term:"ハフマン符号",
+   statement:"ハフマン符号は出現頻度の高い文字に長いビット列を、頻度の低い文字に短いビット列を割り当てることでデータを圧縮する手法である。",
+   answer:false,
+   explanation:"ハフマン符号は出現頻度の「高い」文字に「短い」ビット列を、「低い」文字に「長い」ビット列を割り当てます。設問は高低・長短が逆です。",
+   wrongPoint:"「高い文字に長い」「低い文字に短い」が逆です。正しくは頻度が高い文字ほど短いビット列を割り当てます。"},
+  {id:"1-3-03",term:"情報源符号化",
+   statement:"情報源符号化（データ圧縮）とはデータの冗長性を取り除いてサイズを小さくする技術であり、ZIPやJPEGなどが代表例である。",
+   answer:true,
+   explanation:"その通りです。情報源符号化はデータに含まれる冗長性を削減してファイルサイズを小さくする技術です。テキスト圧縮のZIP、画像圧縮のJPEGなどがよく知られています。"},
+  {id:"1-3-04",term:"ASCIIコード",
+   statement:"ASCIIコードは英字・数字・記号など128種類の文字を定義した文字コードであり、例えば大文字の「A」は10進数で65に対応する。",
+   answer:true,
+   explanation:"その通りです。ASCII（American Standard Code for Information Interchange）は7ビットで128文字を定義します。「A」=65、「a」=97、「0」=48などが代表的な対応値です。"},
+  {id:"1-3-05",term:"EUC",
+   statement:"EUC（拡張UNIXコード）は主に欧米語専用の文字コードであり、日本語などのマルチバイト文字の表現には対応していない。",
+   answer:false,
+   explanation:"EUCは日本語などのマルチバイト文字を効率的に扱うために設計された文字コードです。EUC-JPはUNIX系システムでの日本語表現に広く使われました。",
+   wrongPoint:"「欧米語専用」「日本語に対応していない」が誤りです。EUCは日本語などの多言語（マルチバイト文字）を扱うために設計されました。"},
+  {id:"1-3-06",term:"JISコード",
+   statement:"JISコードは日本工業規格に基づく文字コードで、漢字・ひらがな・カタカナなど日本語の文字をコンピュータ上で扱うための規格である。",
+   answer:true,
+   explanation:"その通りです。JISコードはJIS（日本工業規格）が制定した文字コードです。JIS X 0201やJIS X 0208などのバリエーションがあり、日本語文字をコンピュータで処理するための基盤となっています。"},
+  {id:"1-3-07",term:"シフトJISコード",
+   statement:"シフトJISコードは1バイトまたは2バイトでASCII文字と日本語文字を混在して表現できる文字コードで、主に日本のWindowsシステムで広く使用された。",
+   answer:true,
+   explanation:"その通りです。シフトJISはASCIIコードに日本語文字を追加した可変長文字コードです。1バイトでASCII文字、2バイトで漢字などを表現し、Windowsや古いWebサイトで広く使われました。"},
+  {id:"1-3-08",term:"Unicode",
+   statement:"UnicodeはUTF-8やUTF-16などのエンコーディング方式を持つ世界共通の文字コード規格であり、アラビア語・中国語・日本語など多様な言語の文字を一つのシステムで扱える。",
+   answer:true,
+   explanation:"その通りです。Unicodeは世界中のすべての文字を統一的に扱うための規格です。UTF-8（Webで最も普及）・UTF-16・UTF-32などのエンコーディングがあります。"},
+  {id:"1-3-09",term:"UCS",
+   statement:"UCS（Universal Character Set）はASCIIやISO-8859などの古い文字セットの後継として開発され、Unicodeと統合されて全世界の文字を一つのシステムで扱う基盤となっている。",
+   answer:true,
+   explanation:"その通りです。UCSはISO/IECが策定した国際標準の文字セットで、Unicodeと整合性を保って発展しました。現在はUnicodeとUCSは事実上同一の文字セットを指します。"},
+  {id:"1-3-10",term:"述語論理",
+   statement:"述語論理は命題論理を拡張したもので、主語と述語の構造を持つことで「すべての人は死ぬ」のような全称量化や「ある人間は飛べる」のような存在量化を表現できる。",
+   answer:true,
+   explanation:"その通りです。述語論理は命題論理より表現力が高く、全称記号∀（すべての）と存在記号∃（ある）を使った量化が可能です。AI・数理論理・データベースの問い合わせ言語などで使われます。"},
+  {id:"1-3-11",term:"演繹推論",
+   statement:"演繹推論は特定の事例を観察することで一般的な法則を導き出す推論方法であり、科学的帰納法の一種である。",
+   answer:false,
+   explanation:"特定の事例から一般的な法則を導くのは「帰納推論」です。演繹推論は「一般的な前提から特定の結論を導く」推論方法です。「すべての人間は死ぬ→ソクラテスは人間である→ソクラテスは死ぬ」が演繹の典型例です。",
+   wrongPoint:"「特定の事例から一般的な法則を導く」が誤りです。これは帰納推論の説明です。演繹推論は一般的な前提から特定の結論を導きます。"},
+  {id:"1-3-12",term:"帰納推論",
+   statement:"帰納推論は特定の観察や事例から一般的な結論を導く手法であり、その結論は必ずしも確実ではなく確率的なものである。",
+   answer:true,
+   explanation:"その通りです。帰納推論は「白いカモシカを100羽見た→すべてのカモシカは白い」のように個別事例から一般法則を導きます。ただし次に見るカモシカが黒い可能性もあり、結論は確率的です。"},
+  {id:"1-3-13",term:"形式言語",
+   statement:"形式言語は厳密に定義された文法ルールを持つ言語であり、プログラミング言語や数理論理の言語がその例であり、コンパイラやインタプリタはこの形式言語に基づいて動作する。",
+   answer:true,
+   explanation:"その通りです。形式言語は自然言語と違い文法が曖昧さなく定義されています。プログラミング言語・正規表現・SQLなどが形式言語の例で、コンパイラは形式言語の文法に基づきソースコードを解析します。"},
+  {id:"1-3-14",term:"逆ポーランド表記法",
+   statement:"逆ポーランド表記法（後置記法）は演算子を被演算数の後に置く記法で、「3 4 5 × +」は「3+(4×5)」を意味し、スタックを使った計算処理に適している。",
+   answer:true,
+   explanation:"その通りです。逆ポーランド表記法（RPN）は演算子を後置する記法で括弧が不要です。「3 4 5 × +」はまず4×5=20を計算し、次に3+20=23となります。スタックで左から処理するだけで正しく計算できます。"},
+  {id:"1-3-15",term:"有限オートマトン",
+   statement:"有限オートマトンは有限の状態を持ち入力に応じて状態を遷移する計算モデルであり、正規表現や字句解析（コンパイラのレキサー）などに応用される。",
+   answer:true,
+   explanation:"その通りです。有限オートマトン（FA）は状態の有限集合・入力アルファベット・遷移関数・初期状態・受理状態で定義される計算モデルです。正規表現のマッチングやコンパイラの字句解析に使われます。"},
+  {id:"1-3-16",term:"時間計算量",
+   statement:"時間計算量はアルゴリズムの実行時間を入力サイズに対して評価する指標であり、O記法（ランダウ記法）で表現される。O(n)はデータサイズnに比例した時間がかかることを示す。",
+   answer:true,
+   explanation:"その通りです。時間計算量はO(1)・O(log n)・O(n)・O(n log n)・O(n²)などで表します。アルゴリズムを比較・評価する際の重要な指標で、大きなデータに対するパフォーマンスを予測できます。"},
+  {id:"1-3-17",term:"エキスパートシステム",
+   statement:"エキスパートシステムは特定分野の専門家の知識をデータベース化し、推論エンジンによって問題解決を行う人工知能システムであり、医療診断支援などで活用される。",
+   answer:true,
+   explanation:"その通りです。エキスパートシステムは知識ベースと推論エンジンで構成され、専門家の知識をルールや事実として蓄積し論理的に推論します。1980年代に医療・工学・財務分野で多く開発されました。"},
+  {id:"1-3-18",term:"知識ベース",
+   statement:"知識ベースはエキスパートシステムなどで用いられる専門知識を体系的に格納したデータベースであり、推論エンジンが参照してユーザーの問いに答える基盤となる。",
+   answer:true,
+   explanation:"その通りです。知識ベースはルール・事実・概念などの知識を構造化して保存したシステムです。推論エンジンが知識ベースを参照して論理的な結論を導き出します。"},
+  {id:"1-3-19",term:"推論エンジン",
+   statement:"推論エンジンは知識ベースに格納された知識を活用して、与えられた問題に対して新しい結論や知識を論理的に導き出すシステムである。",
+   answer:true,
+   explanation:"その通りです。推論エンジンはエキスパートシステムの核心部分で、知識ベースのルールと事実を組み合わせて推論を行います。前向き推論（事実から結論へ）と後向き推論（目標から前提へ）の2種類があります。"},
+  {id:"1-3-20",term:"汎化",
+   statement:"機械学習における汎化とは、モデルが訓練データだけでなく未知の新しいデータに対しても正確な予測を行える能力のことを指す。",
+   answer:true,
+   explanation:"その通りです。汎化（Generalization）は機械学習の重要な目標です。訓練データに過剰適合（過学習）したモデルは汎化性能が低く、実用上の予測精度が落ちます。"},
+  {id:"1-3-21",term:"機械学習",
+   statement:"機械学習はデータからパターンを自動的に学習し、予測や判断を行う技術であり、明示的にルールをプログラムする従来の手法とは異なるアプローチである。",
+   answer:true,
+   explanation:"その通りです。機械学習はデータから自動的にルールやパターンを発見します。スパムフィルタ・画像認識・音声認識・レコメンデーションシステムなど多くの応用があります。"},
+  {id:"1-3-22",term:"教師あり学習",
+   statement:"教師あり学習は正解ラベル付きのデータを使ってモデルを訓練する手法であり、分類（スパム判定など）と回帰（数値予測など）が代表的なタスクである。",
+   answer:true,
+   explanation:"その通りです。教師あり学習は入力と正解（ラベル）のペアでモデルを訓練します。分類（カテゴリを予測）と回帰（連続値を予測）が主なタスクで、最も実用化されている機械学習手法です。"},
+  {id:"1-3-23",term:"教師なし学習",
+   statement:"教師なし学習はラベルなしのデータからパターンや構造を発見する手法であり、クラスタリング（グループ化）や次元削減が代表的なタスクである。",
+   answer:true,
+   explanation:"その通りです。教師なし学習は正解ラベルなしでデータの構造を発見します。k-meansなどのクラスタリングでは類似データをグループ化し、主成分分析などの次元削減ではデータの本質的な特徴を抽出します。"},
+  {id:"1-3-24",term:"強化学習",
+   statement:"強化学習はエージェントが環境との相互作用を通じて報酬を最大化する行動を学習する手法であり、ゲームAI・ロボット制御・自動運転などに応用される。",
+   answer:true,
+   explanation:"その通りです。強化学習はエージェントが行動→報酬→学習のサイクルを繰り返して最適な行動方針（ポリシー）を習得します。AlphaGoのような囲碁AIや自動運転の経路選択などで活用されます。"},
+  {id:"1-3-25",term:"線形回帰",
+   statement:"線形回帰は独立変数と従属変数の間の直線的な関係をモデル化する手法で、勉強時間から試験の点数を予測するような連続値の予測問題に使われる。",
+   answer:true,
+   explanation:"その通りです。線形回帰はy=ax+bという直線（または超平面）でデータの関係を表します。シンプルで解釈しやすく、連続値予測の基本的な手法として広く使われます。"},
+  {id:"1-3-26",term:"ロジスティック回帰",
+   statement:"ロジスティック回帰は名称に「回帰」とあるが実際には分類問題に使われる手法で、シグモイド関数を用いて出力を0〜1の確率に変換し二値分類を行う。",
+   answer:true,
+   explanation:"その通りです。ロジスティック回帰は線形回帰の出力をシグモイド関数で0〜1に変換することで確率を表現し、閾値（通常0.5）以上か否かで2クラスに分類します。名称は「回帰」ですが分類手法です。"},
+  {id:"1-3-27",term:"決定木",
+   statement:"決定木は条件分岐を木構造で表現した機械学習モデルであり、視覚的に理解しやすく解釈性が高いという特長があるが、深くなると過学習しやすいという欠点もある。",
+   answer:true,
+   explanation:"その通りです。決定木はルートから葉ノードまでの条件分岐でデータを分類・予測します。直感的で解釈しやすい反面、訓練データに過学習しやすい傾向があります。ランダムフォレストはこの欠点を改善した手法です。"},
+  {id:"1-3-28",term:"ランダムフォレスト",
+   statement:"ランダムフォレストは複数の決定木を組み合わせたアンサンブル学習手法で、単一の決定木より過学習を防ぎ汎化性能を高めることができる。",
+   answer:true,
+   explanation:"その通りです。ランダムフォレストはデータのランダムサンプリングと特徴のランダム選択で複数の多様な決定木を生成し、その多数決（分類）または平均（回帰）で予測します。過学習しにくく精度も高い実用的な手法です。"},
+  {id:"1-3-29",term:"サポートベクターマシン",
+   statement:"サポートベクターマシン（SVM）は2クラスのデータを分離するマージン（余白）を最大化する境界を求める分類アルゴリズムで、高次元データにも有効である。",
+   answer:true,
+   explanation:"その通りです。SVMはクラス間のマージンを最大化するハイパーラインを見つけます。カーネルトリックを用いることで非線形な境界も学習でき、テキスト分類・画像認識など多くの分野で活用されます。"},
+  {id:"1-3-30",term:"主成分分析",
+   statement:"主成分分析（PCA）は機械学習の文脈では分類や回帰に直接使う予測モデルであり、教師あり学習の代表的な手法の一つである。",
+   answer:false,
+   explanation:"主成分分析（PCA）は次元削減の手法であり、教師なし学習に分類されます。予測モデルそのものではなく、データの前処理や可視化・特徴抽出などに使われます。",
+   wrongPoint:"「分類や回帰に直接使う予測モデル」「教師あり学習の代表的な手法」が誤りです。PCAは次元削減の教師なし学習手法です。"},
+  {id:"1-3-31",term:"学習データ",
+   statement:"学習データ（訓練データ）は機械学習モデルの訓練に使用するデータセットで、その質と量がモデルの性能に大きく影響する。",
+   answer:true,
+   explanation:"その通りです。学習データはモデルがパターンを学習するための基盤です。データが少ない・偏っている・ノイズが多いとモデルの精度は下がります。一般に多様で代表性の高いデータほど良質とされます。"},
+  {id:"1-3-32",term:"検証データ",
+   statement:"検証データ（バリデーションデータ）は訓練中にモデルのハイパーパラメータ調整や過学習の監視に使用するデータセットで、訓練データとは別に用意する。",
+   answer:true,
+   explanation:"その通りです。検証データは訓練途中のモデル性能を評価し、ハイパーパラメータ（学習率・層の数など）の調整に使います。訓練・検証・テストの3分割がよく使われます。"},
+  {id:"1-3-33",term:"テストデータ",
+   statement:"テストデータはモデルの最終的な汎化性能を評価するためのデータセットであり、モデルの訓練や調整には一切使用しない。",
+   answer:true,
+   explanation:"その通りです。テストデータはモデル開発が完了した後に最終評価のみに使います。訓練や検証に使ったデータでテストすると過楽観的な評価になるため、完全に分離しておく必要があります。"},
+  {id:"1-3-34",term:"汎化性能",
+   statement:"汎化性能とは機械学習モデルが未知のデータに対しても正確な予測を行える能力で、過学習したモデルは訓練データでは高精度だが汎化性能が低くなる。",
+   answer:true,
+   explanation:"その通りです。汎化性能が高いモデルは訓練データに含まれない新しいデータにも対応できます。過学習（オーバーフィッティング）はモデルが訓練データのノイズまで学習してしまい汎化性能を損ないます。"},
+  {id:"1-3-35",term:"過学習",
+   statement:"過学習（オーバーフィッティング）とは機械学習モデルが訓練データに過度に適合することで未知のデータへの予測精度が低下する現象であり、交差検証や正則化で対策できる。",
+   answer:true,
+   explanation:"その通りです。過学習は訓練データのノイズや偶然のパターンまで覚えてしまう状態です。対策として交差検証・正則化（L1/L2）・ドロップアウト・データ拡張・早期停止などがあります。"},
+  {id:"1-3-36",term:"交差検証",
+   statement:"交差検証（クロスバリデーション）はデータをk分割しk回の訓練・評価を繰り返すことでモデルの汎化性能をより信頼性高く評価する手法である。",
+   answer:true,
+   explanation:"その通りです。k分割交差検証は全データをk個に分割し、k回それぞれ1つをテスト・残りを訓練に使います。k個の評価値の平均がモデルの性能推定値となり、データを余すなく活用できます。"},
+  {id:"1-3-37",term:"ホールドアウト検証",
+   statement:"ホールドアウト検証はデータセットを訓練用（約70〜80%）とテスト用（約20〜30%）に分割し、訓練後にテスト用データでモデルを評価する手法である。",
+   answer:true,
+   explanation:"その通りです。ホールドアウト検証は最もシンプルな評価方法で、訓練用とテスト用を一度だけ分割します。実装が簡単ですが、データ量が少ない場合は評価の信頼性が下がる点が弱点です。"},
+  {id:"1-3-38",term:"ROC曲線",
+   statement:"ROC曲線は二値分類モデルの性能評価に使用され、横軸に偽陽性率・縦軸に真陽性率をとり、曲線が左上に近いほどモデルの性能が高いことを示す。",
+   answer:true,
+   explanation:"その通りです。ROC曲線（受信者動作特性曲線）は閾値を変化させたときの真陽性率と偽陽性率のトレードオフを可視化します。AUC（曲線下面積）が1に近いほど優れたモデルです。"},
+  {id:"1-3-39",term:"ディープラーニング",
+   statement:"ディープラーニングは多層のニューラルネットワークを使った機械学習手法で、画像認識・音声認識・自然言語処理など多くの分野で従来手法を超える性能を発揮している。",
+   answer:true,
+   explanation:"その通りです。ディープラーニング（深層学習）は中間層を多数重ねたニューラルネットワークを使います。大量のデータとGPUの普及により2010年代以降に急発展し、AIの様々な分野で飛躍的な性能向上をもたらしました。"},
+  {id:"1-3-40",term:"ニューラルネットワーク",
+   statement:"ニューラルネットワークは人間の脳の神経細胞のネットワークを模倣した計算モデルであり、入力層・中間層（隠れ層）・出力層から構成される。",
+   answer:true,
+   explanation:"その通りです。人工ニューラルネットワーク（ANN）は互いに接続されたニューロン（ノード）の層で構成されます。各ニューロンは重み付き入力を受け取り活性化関数を適用して出力を生成します。"},
+  {id:"1-3-41",term:"多層パーセプトロン",
+   statement:"多層パーセプトロン（MLP）は入力層・1つ以上の隠れ層・出力層から成るニューラルネットワークで、非線形な問題を解くことができる。",
+   answer:true,
+   explanation:"その通りです。単純パーセプトロンは線形分離可能な問題しか解けませんが、多層パーセプトロンは隠れ層と非線形活性化関数を持つことで非線形な問題も解くことができます。"},
+  {id:"1-3-42",term:"バックプロパゲーション",
+   statement:"バックプロパゲーション（誤差逆伝播法）はニューラルネットワークの学習において、出力誤差を出力層から入力層に向けて逆方向に伝播させ各層の重みを更新するアルゴリズムである。",
+   answer:true,
+   explanation:"その通りです。バックプロパゲーションは連鎖律（チェーンルール）を利用して各層の重みに対する誤差の勾配を計算し、勾配降下法で重みを更新します。ニューラルネットワークの学習の核心となるアルゴリズムです。"},
+  {id:"1-3-43",term:"勾配消失問題",
+   statement:"勾配消失問題とはディープニューラルネットワークの学習において層を逆伝播するにつれて勾配が非常に大きくなり学習が不安定になる現象である。",
+   answer:false,
+   explanation:"勾配消失問題は勾配が「小さくなる（消失する）」問題です。「大きくなる」のは勾配爆発問題です。勾配消失では初期層の重みがほとんど更新されず学習が進まなくなります。",
+   wrongPoint:"「勾配が非常に大きくなる」が誤りです。勾配消失問題は勾配が非常に「小さく」なって学習が進まなくなる問題です。"},
+  {id:"1-3-44",term:"活性化関数",
+   statement:"活性化関数はニューラルネットワークの各ニューロンの出力を非線形に変換する関数であり、この非線形性によってモデルが複雑なパターンを学習できる。",
+   answer:true,
+   explanation:"その通りです。活性化関数がなければニューラルネットワークは線形変換の積（=別の線形変換）にすぎません。シグモイド・ReLU・tanhなどの非線形関数を使うことで複雑な関係を学習できます。"},
+  {id:"1-3-45",term:"事前学習",
+   statement:"事前学習（プリトレーニング）とは大量のデータで基礎的な知識を習得させるプロセスで、これにより後の特定タスクへのファインチューニングを少ないデータで効率的に行える。",
+   answer:true,
+   explanation:"その通りです。BERTやGPTなどの大規模言語モデルは膨大なテキストで事前学習を行い、その後少量のタスク固有データでファインチューニングします。転移学習の一形態です。"},
+  {id:"1-3-46",term:"ファインチューニング",
+   statement:"ファインチューニングとは事前学習済みモデルを特定のタスク用に少量のデータで追加訓練し、モデルの性能を特定ドメインに適応させるプロセスである。",
+   answer:true,
+   explanation:"その通りです。ファインチューニングは事前学習済みモデルの重みを初期値として、特定タスクのデータで追加学習します。ゼロから学習するよりも少ないデータと計算量で高精度なモデルを得られます。"},
+  {id:"1-3-47",term:"転移学習",
+   statement:"転移学習はあるタスクで学習した知識を関連する別のタスクに活用する技術で、特にデータが少ない場合に有効である。",
+   answer:true,
+   explanation:"その通りです。転移学習はソースドメインで学習した特徴表現をターゲットドメインのタスクに活用します。例えば大量の一般画像で学習したCNNを医療画像の分類に転用することができます。"},
+  {id:"1-3-48",term:"畳み込みニューラルネットワーク",
+   statement:"畳み込みニューラルネットワーク（CNN）は画像認識に特化した深層学習モデルで、畳み込み層によって画像の局所的な特徴（エッジ・テクスチャなど）を自動的に抽出する。",
+   answer:true,
+   explanation:"その通りです。CNNは畳み込み層・プーリング層・全結合層から構成されます。畳み込み層は小さなフィルタで画像をスキャンしてエッジや形状などの特徴を抽出します。画像分類・物体検出・顔認識など多くの視覚タスクで使われます。"},
+  {id:"1-3-49",term:"リカレントニューラルネットワーク",
+   statement:"リカレントニューラルネットワーク（RNN）は時系列データや系列データの処理に特化した深層学習モデルで、前の時刻の出力を次の入力に使う再帰的な構造を持つ。",
+   answer:true,
+   explanation:"その通りです。RNNは隠れ状態（hidden state）に過去の情報を保持しながら系列を処理します。自然言語処理・音声認識・時系列予測などに使われますが、長い系列では勾配消失問題が生じやすいため、LSTMやGRUが開発されました。"},
+  {id:"1-3-50",term:"生成モデル",
+   statement:"生成モデルは既存データのパターンを学習して新しいデータを生成できる機械学習モデルであり、GAN（敵対的生成ネットワーク）や拡散モデルが代表例である。",
+   answer:true,
+   explanation:"その通りです。生成モデルはデータの分布を学習し、そこからサンプリングすることで新しいデータを生成します。GAN・VAE（変分オートエンコーダ）・拡散モデルなどがあり、画像生成・テキスト生成・音楽生成などに使われます。"},
+  {id:"1-3-51",term:"敵対的生成ネットワーク",
+   statement:"敵対的生成ネットワーク（GAN）は生成器と識別器の2つのニューラルネットワークが互いに競い合うことで学習を進める生成モデルであり、リアルな画像生成などに使われる。",
+   answer:true,
+   explanation:"その通りです。GANでは生成器が本物らしいデータを生成しようとし、識別器が本物か偽物かを見分けようとします。この競争により両者が互いに改善され、高品質な生成物が得られます。"},
+  {id:"1-3-52",term:"基盤モデル",
+   statement:"基盤モデルは特定のタスクに特化して開発される小規模なAIモデルであり、ファインチューニングなしに様々なタスクに適用することはできない。",
+   answer:false,
+   explanation:"基盤モデルは大規模なデータで学習した汎用的なモデルで、様々なタスクに適用できる汎用性が特徴です。「特定タスクに特化した小規模モデル」という説明も「ファインチューニングなしには使えない」も誤りです。",
+   wrongPoint:"「特定タスクに特化した小規模なモデル」「ファインチューニングなしに様々なタスクに適用できない」が誤りです。基盤モデルは汎用的な大規模モデルで、ゼロショットでも様々なタスクに対応できます。"},
+  {id:"1-3-53",term:"拡散モデル",
+   statement:"生成AIの文脈における拡散モデルはデータにノイズを加えていくプロセスと、そのノイズを逆方向に除去していくプロセスを学習することで高品質な画像などを生成する深層学習モデルである。",
+   answer:true,
+   explanation:"その通りです。拡散モデル（Diffusion Model）はノイズを段階的に加えて完全なノイズにする「拡散プロセス」と、ノイズから元のデータに戻す「逆拡散プロセス」を学習します。Stable DiffusionやDALL-Eなどで使われています。"},
+  {id:"1-3-54",term:"言語モデル",
+   statement:"言語モデルはテキストの統計的パターンを学習し、次の単語の予測やテキスト生成を行うモデルであり、自然言語処理の多くのタスクの基盤となっている。",
+   answer:true,
+   explanation:"その通りです。言語モデルはP(次の単語|これまでの文脈)を学習します。n-gramモデルからRNN言語モデル、さらに近年のTransformerベースの大規模言語モデルへと発展し、テキスト生成・翻訳・要約などに使われます。"},
+  {id:"1-3-55",term:"大規模言語モデル",
+   statement:"大規模言語モデル（LLM）は膨大なテキストデータで学習した大規模なニューラルネットワークであり、文章生成・質問応答・翻訳など多様な自然言語処理タスクに対応できる。",
+   answer:true,
+   explanation:"その通りです。LLM（Large Language Model）はGPT・BERT・LLaMAなどが代表例で、数百億〜数兆のパラメータを持ちます。事前学習とファインチューニングにより多様なタスクで高い性能を発揮します。"},
+  {id:"1-3-56",term:"自己教師あり学習",
+   statement:"自己教師あり学習はラベルなしデータから自動的に擬似ラベルを生成して学習を行う手法で、大量のラベルなしデータを有効活用できる。",
+   answer:true,
+   explanation:"その通りです。自己教師あり学習はデータ自体から監督信号を生成します。例えば文章の一部をマスクして予測させるBERTの事前学習タスク（マスクドLM）が典型例です。ラベル付けコストなしに大量データを活用できます。"},
+  {id:"1-3-57",term:"プロンプトエンジニアリング",
+   statement:"プロンプトエンジニアリングはAIモデルに与える指示文（プロンプト）を工夫することでより良い出力を引き出す技術であり、LLMの活用において重要なスキルとなっている。",
+   answer:true,
+   explanation:"その通りです。プロンプトエンジニアリングは目的に合った具体的な指示・文脈・例示などをプロンプトに含めることでAIの出力品質を高めます。ゼロショット・フューショット・チェーンオブソートなどの手法があります。"},
+  {id:"1-3-58",term:"中間言語",
+   statement:"中間言語（バイトコードなど）はソースコードをコンパイルした際の中間的な表現であり、Javaのバイトコードはそのまま特定のOSのネイティブコードと等価で直接CPUで実行できる。",
+   answer:false,
+   explanation:"JavaのバイトコードはJVM（Java仮想マシン）で実行するための中間表現であり、CPUが直接実行するネイティブコードとは異なります。JVMがバイトコードを実行時に解釈またはJITコンパイルします。",
+   wrongPoint:"「特定のOSのネイティブコードと等価で直接CPUで実行できる」が誤りです。バイトコードはJVM上で動作する中間表現であり、CPUが直接実行するネイティブコードとは異なります。"},
+  {id:"1-3-59",term:"目的プログラム",
+   statement:"目的プログラム（オブジェクトコード）はソースコードをコンパイラやアセンブラで変換した機械語のプログラムであり、特定のコンピュータアーキテクチャに依存する。",
+   answer:true,
+   explanation:"その通りです。目的プログラムはCPUが直接実行できる機械語コードです。コンパイラがソースコードから生成します。特定のCPUアーキテクチャ（x86・ARM等）に依存するため他のアーキテクチャではそのままでは動作しません。"},
+  {id:"1-3-60",term:"オートマトン",
+   statement:"オートマトンは有限の状態と遷移規則を持つ抽象的な計算モデルであり、正規表現の処理・プログラミング言語のコンパイラ・テキスト検索など多くの分野で活用される。",
+   answer:true,
+   explanation:"その通りです。オートマトンは計算理論の基礎的な概念で、有限オートマトン（FA）・プッシュダウンオートマトン（PDA）・チューリングマシンなど種類があります。正規表現のマッチングや字句解析・構文解析に使われます。"},
+  {id:"1-3-61",term:"手続型言語",
+   statement:"手続型言語はプログラムの処理手順を順番に記述する言語であり、C言語やPascalがその代表例である。",
+   answer:true,
+   explanation:"その通りです。手続型言語はアルゴリズムを順次・条件分岐・繰り返しの組み合わせで記述します。C・Pascal・COBOLなどが代表例です。オブジェクト指向言語や関数型言語と並ぶプログラミングパラダイムの一つです。"},
+  {id:"1-3-62",term:"オブジェクト指向言語",
+   statement:"オブジェクト指向言語はデータとそれを操作するメソッドをまとめた「オブジェクト」を基本単位とする言語であり、再利用性・保守性の高いプログラム開発に適している。",
+   answer:true,
+   explanation:"その通りです。オブジェクト指向言語はカプセル化・継承・ポリモーフィズムの3原則を持ちます。Java・Python・C++・Rubyなどが代表例で、大規模ソフトウェア開発で広く使われます。"},
+  {id:"1-3-63",term:"主成分分析",
+   statement:"機械学習における主成分分析（PCA）は高次元データを低次元に圧縮する教師なし学習の次元削減手法で、データの分散が最大になる方向（主成分）を見つけて新しい座標系を構成する。",
+   answer:true,
+   explanation:"その通りです。PCAは共分散行列の固有ベクトルを主成分として選び、分散の大きい順に並べます。第1主成分が最も分散が大きく情報量が多く、以降の主成分は順に小さくなります。可視化・ノイズ除去・特徴量削減などに活用されます。"}
+];
+
+const CAT_ID="1-3",WEAK_KEY="fe_weak_v1",BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(score,total){const prev=getBest();if(!prev||score/total>prev.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total}));}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const best=getBest();document.getElementById('best-score-stat').textContent=best?`${best.score}/${best.total}`:'—';}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');if(name==='weak')renderWeakList();if(name==='start')updateStartStats();}
+function showTab(name){showView(name);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode){
+  lastMode=mode;let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(QUESTIONS).slice(0,10);}
+  else{pool=shuffle(QUESTIONS);}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(userAnswer){
+  const q=currentQueue[currentIdx],isCorrect=(userAnswer===q.answer);
+  if(isCorrect)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(userAnswer&&!isCorrect)mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const total=currentQueue.length,pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>

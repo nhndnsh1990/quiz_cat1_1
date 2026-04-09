@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-2 応用数学 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:36px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">1-2 応用数学</div>
+  <div class="header-meta">70問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 1-2</div>
+    <div class="start-title">応用数学</div>
+    <div class="start-sub">基礎理論 ／ 70問収録</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">70</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">70問すべてに挑戦</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 70</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag">1-2 応用数学</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:"1-2-01",term:"階乗",
+   statement:"5の階乗（5!）は5×4×3×2×1=120であり、階乗は組み合わせや順列の計算において重要な役割を果たす。",
+   answer:true,
+   explanation:"その通りです。n!=n×(n-1)×…×2×1 と定義されます。5!=120 は正しく、確率論・統計学・組合せ論で頻繁に使われます。"},
+  {id:"1-2-02",term:"加法定理",
+   statement:"確率の加法定理は、互いに排他的でない（重複する可能性がある）二つの事象の確率を単純に足し合わせることで、いずれかが起こる確率を求める公式である。",
+   answer:false,
+   explanation:"加法定理の基本形は互いに排他的な事象（同時に起こらない事象）に適用します。重複する可能性がある場合は P(A∪B)=P(A)+P(B)-P(A∩B) のように積事象の確率を引く必要があります。",
+   wrongPoint:"「互いに排他的でない事象に単純に足し合わせる」が誤りです。重複する場合は積事象の確率を引く必要があります。"},
+  {id:"1-2-03",term:"乗法定理",
+   statement:"乗法定理は二つの独立した事象が同時に起こる確率を求める際に使用し、それぞれの事象の確率を掛け合わせることで計算できる。",
+   answer:true,
+   explanation:"その通りです。独立した事象A・Bの同時確率は P(A∩B)=P(A)×P(B) で求めます。サイコロを2回振って両方3が出る確率は 1/6×1/6=1/36 です。"},
+  {id:"1-2-04",term:"同時確率",
+   statement:"同時確率とは2つ以上の事象が同時に発生する確率のことであり、独立な事象の場合は各事象の確率の積として計算できる。",
+   answer:true,
+   explanation:"その通りです。同時確率（結合確率）P(A∩B) は独立な事象では P(A)×P(B) で計算できます。ベイズの定理や条件付き確率の基礎にもなる重要な概念です。"},
+  {id:"1-2-05",term:"条件付き確率",
+   statement:"条件付き確率 P(B|A) は、事象Aが起こった条件のもとで事象Bが起こる確率であり、P(B|A)=P(A∩B)/P(A) という式で表される。",
+   answer:true,
+   explanation:"その通りです。条件付き確率 P(B|A) はP(A∩B)/P(A) で定義されます。Aが起きた条件のもとでBが起きる確率を意味し、機械学習やデータ分析でも重要な概念です。"},
+  {id:"1-2-06",term:"ベイズの定理",
+   statement:"ベイズの定理は事前確率と尤度を組み合わせて事後確率を求める手法であり、医学での診断や機械学習など幅広い分野で活用されている。",
+   answer:true,
+   explanation:"その通りです。ベイズの定理はP(A|B)=P(B|A)P(A)/P(B) という形で、新しい証拠（尤度）をもとに事前確率を更新して事後確率を得ます。スパムフィルタや医療診断など多くの分野で活用されます。"},
+  {id:"1-2-07",term:"ポアソン分布",
+   statement:"ポアソン分布は成功と失敗の二値をとる試行を一定回数繰り返した際の成功数をモデル化する確率分布である。",
+   answer:false,
+   explanation:"成功と失敗の二値試行を繰り返した際の成功数をモデル化するのは二項分布です。ポアソン分布は一定時間・一定領域内での事象の発生回数をモデル化する分布です。",
+   wrongPoint:"これは「二項分布」の説明です。ポアソン分布は単位時間・単位空間での事象の発生回数をモデル化します。"},
+  {id:"1-2-08",term:"ベルヌーイ分布",
+   statement:"ベルヌーイ分布は成功（確率p）と失敗（確率1-p）の2結果のみを持つ1回の試行に関する確率分布であり、二項分布の基礎となる。",
+   answer:true,
+   explanation:"その通りです。ベルヌーイ分布はコイン投げのような1回の二値試行の確率分布です。これをn回繰り返した場合の成功回数の分布が二項分布になります。"},
+  {id:"1-2-09",term:"二項分布",
+   statement:"二項分布は成功確率pの独立した試行をn回繰り返したときの成功回数の確率分布であり、コインをn回投げたときに表が出る回数の分布がその典型例である。",
+   answer:true,
+   explanation:"その通りです。二項分布 B(n,p) はn回の独立した二値試行での成功回数の分布です。コイン投げ・品質管理・選挙予測など多くの場面で使われます。"},
+  {id:"1-2-10",term:"正規分布",
+   statement:"正規分布は平均値を中心に左右非対称のグラフ（歪んだ鐘形）を描く確率分布であり、多くの自然現象や社会現象に見られる。",
+   answer:false,
+   explanation:"正規分布は平均値を中心に「左右対称」の鐘形曲線を描く確率分布です。「非対称」「歪んだ」という部分が誤りです。",
+   wrongPoint:"「左右非対称の歪んだ鐘形」が誤りです。正規分布は平均値を中心に左右対称の鐘形曲線を描きます。"},
+  {id:"1-2-11",term:"指数分布",
+   statement:"指数分布は「無記憶性」を持ち、電話の着信までの待ち時間や機器の故障が発生するまでの時間などの連続データに適用される確率分布である。",
+   answer:true,
+   explanation:"その通りです。指数分布の無記憶性とは「過去にどれだけ待っても次の事象が起きるまでの時間の分布は変わらない」という性質です。待ち行列理論や信頼性工学で広く使われます。"},
+  {id:"1-2-12",term:"中央値",
+   statement:"中央値はデータを大きさの順に並べた際に中央に位置する値であり、平均値と比べて外れ値（異常値）の影響を受けにくい特徴がある。",
+   answer:true,
+   explanation:"その通りです。中央値（メジアン）はデータを昇順に並べたときの真ん中の値で、極端な外れ値があっても変化しにくいため、収入や不動産価格のような歪んだ分布の代表値として適しています。"},
+  {id:"1-2-13",term:"最頻値",
+   statement:"最頻値（モード）はデータセットの中で最も頻繁に出現する値であり、連続データよりもカテゴリカルデータの分析に有用な傾向がある。",
+   answer:true,
+   explanation:"その通りです。最頻値はデータ中で最も多く現れる値です。性別・職業などカテゴリカルデータや名義尺度データの分析で特に有用で、平均や中央値が意味をなさないデータでも使えます。"},
+  {id:"1-2-14",term:"平均値",
+   statement:"平均値はすべてのデータの合計をデータ数で割った値であり、外れ値の影響を受けにくいため常に最も信頼できる代表値である。",
+   answer:false,
+   explanation:"平均値はすべての値を足してデータ数で割るという計算は正しいですが、「外れ値の影響を受けにくい」は誤りです。平均値は極端な外れ値に大きく影響されます。外れ値に強いのは中央値です。",
+   wrongPoint:"「外れ値の影響を受けにくい」が誤りです。平均値は外れ値に大きく影響されます。外れ値に強いのは中央値です。"},
+  {id:"1-2-15",term:"標準偏差",
+   statement:"標準偏差はデータのばらつきを示す指標であり、値が大きいほどデータが平均値から広く散らばっていることを意味する。",
+   answer:true,
+   explanation:"その通りです。標準偏差は分散の平方根で、データが平均値からどれくらい散らばっているかを示します。標準偏差が大きいほどデータのばらつきが大きく、小さいほど集中していることを意味します。"},
+  {id:"1-2-16",term:"分散",
+   statement:"分散は各データの値から平均値を引いた差（偏差）の二乗の平均であり、データのばらつきを示す指標である。",
+   answer:true,
+   explanation:"その通りです。分散はΣ(xi-μ)²/n で計算されます。偏差を二乗して平均を取ることで、正負の偏差が打ち消し合わないようにしています。標準偏差は分散の平方根です。"},
+  {id:"1-2-17",term:"歪度",
+   statement:"歪度が正の値をとる場合、データ分布は右側（高い値の方向）に長い裾を持ち、平均値が中央値より小さくなる傾向がある。",
+   answer:false,
+   explanation:"正の歪度（右歪み）の場合、分布の右側に長い裾を持ちます。この場合、高い値の外れ値が存在するため平均値は中央値より「大きく」なる傾向があります。",
+   wrongPoint:"「平均値が中央値より小さくなる」が誤りです。正の歪度（右歪み）では高い外れ値により平均値が中央値より大きくなる傾向があります。"},
+  {id:"1-2-18",term:"尖度",
+   statement:"尖度は確率分布の形状を表す指標で、正規分布を基準（尖度=3またはゼロ）として分布の尖り具合を示す。尖度が高いほど分布の裾が厚く中心に値が集中している。",
+   answer:true,
+   explanation:"その通りです。尖度（クルトシス）は分布の尖りと裾の厚さを示す指標です。正規分布を基準（超過尖度=0）として、これより大きければ尖ったピーク（裾が厚い）、小さければ平らな分布（裾が薄い）を示します。"},
+  {id:"1-2-19",term:"相関係数",
+   statement:"相関係数は-1から1の範囲をとり、1に近いほど強い正の相関、-1に近いほど強い負の相関、0に近いほど相関が弱いことを示す。",
+   answer:true,
+   explanation:"その通りです。相関係数（ピアソンの相関係数）は-1〜+1の値をとります。+1は完全な正の相関、-1は完全な負の相関、0は無相関を示します。"},
+  {id:"1-2-20",term:"回帰分析",
+   statement:"回帰分析は変数間の関係を分析する統計手法で、説明変数から目的変数を予測するモデルを作成する。説明変数が1つの場合を単回帰、複数の場合を重回帰という。",
+   answer:true,
+   explanation:"その通りです。回帰分析は独立変数（説明変数）から従属変数（目的変数）を予測する手法です。単回帰分析は1変数、重回帰分析は複数変数を使って予測します。"},
+  {id:"1-2-21",term:"相関分析",
+   statement:"相関分析で相関が見られた場合、一方の変数が他方の変数の原因であることが統計的に証明される。",
+   answer:false,
+   explanation:"相関関係があっても因果関係があるとは限りません。「相関≠因果」は統計学の基本原則です。アイスクリームの売上と溺死者数に相関があっても、気温という第三要因（交絡因子）が影響している場合があります。",
+   wrongPoint:"「因果関係が統計的に証明される」が誤りです。相関は2変数の関連の強さを示すだけで、因果関係を証明するものではありません。"},
+  {id:"1-2-22",term:"主成分分析",
+   statement:"主成分分析（PCA）は高次元データを情報の損失を最小限に抑えながら低次元に変換する手法であり、機械学習やデータマイニングの前処理に広く使われる。",
+   answer:true,
+   explanation:"その通りです。主成分分析はデータの分散を最大化する方向（主成分）を順に求め、元のデータを少数の主成分で表現します。次元削減・可視化・特徴抽出などに広く活用されます。"},
+  {id:"1-2-23",term:"因子分析",
+   statement:"因子分析は観測されたデータの背後にある潜在的な共通因子を抽出する手法で、アンケートデータの共通要因を探るなど心理学や社会科学で広く用いられる。",
+   answer:true,
+   explanation:"その通りです。因子分析は複数の観測変数の共変動を少数の潜在因子で説明する手法です。例えばアンケートの多数の質問を「外向性」「誠実性」などの少数の因子にまとめることができます。"},
+  {id:"1-2-24",term:"相関と因果",
+   statement:"2変数間に相関関係があれば、必ず一方が他方の原因である因果関係が存在する。",
+   answer:false,
+   explanation:"相関があっても因果関係があるとは限りません。第三の変数（交絡因子）の影響や偶然の一致による擬似相関も存在します。因果関係を主張するには実験的な検証が必要です。",
+   wrongPoint:"「必ず因果関係が存在する」が誤りです。相関は関連の強さを示すだけで、因果関係の証明にはなりません。"},
+  {id:"1-2-25",term:"擬似相関",
+   statement:"擬似相関とは実際には因果関係がないのに、第三の要因（交絡因子）の影響などにより見かけ上の相関関係が生じる現象である。",
+   answer:true,
+   explanation:"その通りです。擬似相関の有名な例として「アイスクリームの売上と溺死者数の相関」があります。これは夏（気温）という共通要因が両者に影響しているためです。"},
+  {id:"1-2-26",term:"説明変数",
+   statement:"説明変数は回帰分析において目的変数を予測・説明するために使用される変数であり、独立変数とも呼ばれる。",
+   answer:true,
+   explanation:"その通りです。説明変数（独立変数）は目的変数（従属変数）に影響を与える要因として用いられる変数です。家賃予測では「面積」「最寄り駅までの距離」「築年数」などが説明変数になります。"},
+  {id:"1-2-27",term:"目的変数",
+   statement:"目的変数は回帰分析において予測・説明の対象となる変数であり、従属変数とも呼ばれる。",
+   answer:true,
+   explanation:"その通りです。目的変数（従属変数）は分析で予測したい変数です。家賃予測モデルでは「家賃」が目的変数で、面積や立地などが説明変数です。"},
+  {id:"1-2-28",term:"尺度",
+   statement:"データの尺度には名義尺度・順序尺度・間隔尺度・比率尺度の4種類があり、名義尺度が最も情報量が少なく比率尺度が最も情報量が多い。",
+   answer:true,
+   explanation:"その通りです。4つの尺度水準は名義（カテゴリ分類のみ）→順序（順位あり）→間隔（差が意味を持つ）→比率（絶対ゼロ点あり）の順に情報量が増えます。"},
+  {id:"1-2-29",term:"推定",
+   statement:"推定には点推定と区間推定があり、点推定は母集団のパラメータを一つの値で推測し、区間推定は信頼区間としてパラメータが存在する範囲を示す。",
+   answer:true,
+   explanation:"その通りです。点推定は標本平均など単一の値で母集団パラメータを推測します。区間推定は「95%信頼区間は〇〇〜〇〇」のようにパラメータが含まれる範囲を確率付きで示します。"},
+  {id:"1-2-30",term:"尤度",
+   statement:"尤度とは特定のモデルとパラメータのもとで観測されたデータが得られる確率を示す指標であり、尤度が高いほどそのモデルがデータに適合していることを意味する。",
+   answer:true,
+   explanation:"その通りです。尤度（ゆうど）はパラメータθのもとでデータxが得られる確率L(θ|x)を表します。統計的推定では尤度を最大化するパラメータ（最尤推定量）を求めます。"},
+  {id:"1-2-31",term:"最尤推定",
+   statement:"最尤推定は観測データが得られる確率（尤度）を最大にするパラメータを推定値とする方法であり、多くの統計モデルや機械学習アルゴリズムの基礎となっている。",
+   answer:true,
+   explanation:"その通りです。最尤推定（MLE: Maximum Likelihood Estimation）は「このデータが最も起こりやすくなるようなパラメータは何か」を求める方法です。正規分布の平均・分散推定やロジスティック回帰などで使われます。"},
+  {id:"1-2-32",term:"仮説検定",
+   statement:"仮説検定では帰無仮説（H₀）と対立仮説（H₁）を設定し、データが帰無仮説を支持する場合に帰無仮説を棄却して対立仮説を採択する。",
+   answer:false,
+   explanation:"仮説検定では「データが帰無仮説と矛盾する証拠を示す場合（p値が有意水準を下回る場合）」に帰無仮説を棄却します。データが帰無仮説を「支持する」場合は棄却しません。",
+   wrongPoint:"「データが帰無仮説を支持する場合に帰無仮説を棄却する」が逆です。帰無仮説と矛盾する証拠が得られた場合（p値が有意水準未満）に棄却します。"},
+  {id:"1-2-33",term:"有意水準",
+   statement:"有意水準（α）は帰無仮説が正しいにもかかわらず棄却してしまう誤り（第1種の誤り）の確率の上限を定める閾値であり、一般に0.05や0.01が使われる。",
+   answer:true,
+   explanation:"その通りです。有意水準αは第1種の誤り（偽陽性）の許容確率です。p値がαを下回れば帰無仮説を棄却します。0.05（5%）や0.01（1%）が一般的な設定値です。"},
+  {id:"1-2-34",term:"棄却域",
+   statement:"棄却域は検定統計量が入った場合に帰無仮説を採択するための範囲である。",
+   answer:false,
+   explanation:"棄却域は検定統計量が入った場合に帰無仮説を「棄却する」ための範囲です。「採択する」ではなく「棄却する」が正しいです。",
+   wrongPoint:"「帰無仮説を採択する」が誤りです。棄却域は帰無仮説を「棄却する」ための範囲です。"},
+  {id:"1-2-35",term:"第1種の誤り",
+   statement:"第1種の誤りは、実際には正しい帰無仮説を誤って棄却してしまうことであり「偽陽性」とも呼ばれる。その確率は有意水準αで制御される。",
+   answer:true,
+   explanation:"その通りです。第1種の誤り（タイプIエラー）は「実際には効果がないのに効果があると結論づける」誤りです。偽陽性とも呼ばれ、有意水準αを小さくすることでこの誤りを抑制できます。"},
+  {id:"1-2-36",term:"第2種の誤り",
+   statement:"第2種の誤りは、実際には誤りである帰無仮説を棄却せず採択してしまうことであり「偽陰性」とも呼ばれる。",
+   answer:true,
+   explanation:"その通りです。第2種の誤り（タイプIIエラー）は「実際には効果があるのに効果がないと結論づける」誤りです。偽陰性とも呼ばれ、その確率をβと表します。"},
+  {id:"1-2-37",term:"検出力",
+   statement:"検出力（統計的検出力）は帰無仮説が偽のときにそれを正しく棄却できる確率であり、1-βで表される。サンプルサイズを増やすことで検出力を高めることができる。",
+   answer:true,
+   explanation:"その通りです。検出力=1-β（β=第2種の誤りの確率）です。サンプルサイズを増やす・効果量が大きい・有意水準を緩めるなどで検出力を高めることができます。"},
+  {id:"1-2-38",term:"線形代数",
+   statement:"線形代数はベクトルや行列を扱う数学の分野であり、グラフィックスや機械学習でのデータ変換など幅広い分野で応用される。",
+   answer:true,
+   explanation:"その通りです。線形代数は線型方程式・ベクトル空間・行列演算などを扱います。3Dグラフィックスの座標変換、機械学習のニューラルネットワーク、主成分分析など現代のIT技術の基盤です。"},
+  {id:"1-2-39",term:"スカラ",
+   statement:"スカラは大きさと方向を持つ量であり、速度や力のようにベクトルで表現される量と同義である。",
+   answer:false,
+   explanation:"スカラは「大きさのみ」を持つ単一の数値です。「大きさと方向を持つ」のはベクトルの定義です。温度・質量・時間などがスカラの例です。",
+   wrongPoint:"「大きさと方向を持つ」「ベクトルと同義」が誤りです。スカラは大きさのみを持つ単一の数値で、ベクトルとは異なります。"},
+  {id:"1-2-40",term:"ベクトル",
+   statement:"ベクトルは大きさと方向を持つ量であり、風の速度や力のように方向を含む物理量を表現するのに用いられる。",
+   answer:true,
+   explanation:"その通りです。ベクトルは大きさ（スカラー）と方向を持つ量です。速度・力・変位などの物理量の表現や、機械学習でのデータ表現（特徴ベクトル）にも使われます。"},
+  {id:"1-2-41",term:"固有値",
+   statement:"行列Aの固有値λは、Av=λvを満たすゼロでないベクトルv（固有ベクトル）が存在するときの値であり、行列の性質を理解する上で重要な役割を果たす。",
+   answer:true,
+   explanation:"その通りです。固有値と固有ベクトルは行列変換の本質的な性質を捉えます。主成分分析・振動解析・量子力学・ページランクアルゴリズムなど多くの分野で応用されます。"},
+  {id:"1-2-42",term:"固有ベクトル",
+   statement:"行列Aに対して固有ベクトルvは、変換A後も方向が変わらない（スカラー倍になるだけの）特別なベクトルである。",
+   answer:true,
+   explanation:"その通りです。固有ベクトルはAv=λvの関係を満たし、行列変換を受けても方向は変わらずスカラー倍（固有値λ倍）されるだけです。主成分分析の主成分もデータの共分散行列の固有ベクトルです。"},
+  {id:"1-2-43",term:"行列",
+   statement:"行列は数値を行と列に配置した表であり、線形代数において複数の方程式を同時に解いたりデータ変換を表現したりするために使われる。",
+   answer:true,
+   explanation:"その通りです。行列は数値を長方形に配置した数学的構造です。連立方程式の係数行列として解法に使ったり、座標変換（回転・拡大・縮小）を行列積で表現したりします。"},
+  {id:"1-2-44",term:"逆行列",
+   statement:"行列Aの逆行列A⁻¹はA×A⁻¹=単位行列Iを満たす行列であり、すべての正方行列に対して必ず存在する。",
+   answer:false,
+   explanation:"逆行列はA×A⁻¹=Iを満たす行列という定義は正しいです。しかし「すべての正方行列に存在する」は誤りです。行列式がゼロの特異行列（正則でない行列）には逆行列が存在しません。",
+   wrongPoint:"「すべての正方行列に対して必ず存在する」が誤りです。行列式が0の特異行列には逆行列が存在しません。"},
+  {id:"1-2-45",term:"単位行列",
+   statement:"単位行列は対角成分がすべて1でそれ以外が0の正方行列であり、任意の行列に掛けても元の行列が変わらない（乗算の単位元となる）性質を持つ。",
+   answer:true,
+   explanation:"その通りです。単位行列Iは行列乗算における単位元で、AI=IA=Aが成り立ちます。数の乗算における1と同じ役割を果たします。"},
+  {id:"1-2-46",term:"転置行列",
+   statement:"転置行列は元の行列の行と列を入れ替えた行列であり、行列Aの転置はAᵀと表記される。",
+   answer:true,
+   explanation:"その通りです。転置行列はm×nの行列をn×mの行列に変換します。第i行第j列の要素が第j行第i列に移動します。行列の内積計算や統計の共分散行列の計算などで頻繁に使われます。"},
+  {id:"1-2-47",term:"等差数列",
+   statement:"等差数列は隣り合う項の差が一定の数列であり、1・4・7・10・13は公差3の等差数列の例である。",
+   answer:true,
+   explanation:"その通りです。等差数列は各項が前の項に公差dを加えた数列です。1・4・7・10・13は公差3の等差数列です。一般項はa+(n-1)dで表されます。"},
+  {id:"1-2-48",term:"等比数列",
+   statement:"等比数列は隣り合う項の比（商）が一定の数列であり、2・6・18・54は公比3の等比数列の例である。",
+   answer:true,
+   explanation:"その通りです。等比数列は各項が前の項に公比rを掛けた数列です。2・6・18・54は各項を3倍した等比数列です。一般項はarⁿ⁻¹で表されます。"},
+  {id:"1-2-49",term:"フィボナッチ数列",
+   statement:"フィボナッチ数列は最初の2項が1・1で始まり、以降の各項が前の2項の和となる数列であり、0・1・1・2・3・5・8・13・21と続く。",
+   answer:true,
+   explanation:"その通りです。フィボナッチ数列はF(n)=F(n-1)+F(n-2)（F(0)=0, F(1)=1）と定義されます。自然界のひまわりの種の配置や貝殻の螺旋など多くの現象に現れます。"},
+  {id:"1-2-50",term:"対数正規分布",
+   statement:"対数正規分布はデータの対数を取ると正規分布に従う分布であり、株価や所得など0より大きい連続データのモデル化に使われる。",
+   answer:true,
+   explanation:"その通りです。対数正規分布はX=e^Yと表せ、YがN(μ,σ²)に従います。値が0以上でかつ右裾が長い分布（株価・所得・粒子径など）のモデルとして広く使われます。"},
+  {id:"1-2-51",term:"三角関数",
+   statement:"三角関数のうち正弦（sin）は角度の対辺と斜辺の比を、余弦（cos）は隣辺と斜辺の比を表す。",
+   answer:true,
+   explanation:"その通りです。直角三角形において sin=対辺/斜辺、cos=隣辺/斜辺、tan=対辺/隣辺 と定義されます。波形の分析・音声処理・振動解析など多くの分野で基礎となります。"},
+  {id:"1-2-52",term:"ニュートン法",
+   statement:"ニュートン法は方程式の根を求める数値解析手法であり、関数の接線を利用して反復計算で解に収束させる。ただし初期値によっては収束しない場合もある。",
+   answer:true,
+   explanation:"その通りです。ニュートン法はxₙ₊₁=xₙ-f(xₙ)/f'(xₙ)の反復で根に収束します。適切な初期値なら高速収束しますが、初期値が悪いと発散することがあります。"},
+  {id:"1-2-53",term:"絶対誤差",
+   statement:"絶対誤差は測定値と真の値の差の絶対値であり、|測定値 - 真の値| で計算される。",
+   answer:true,
+   explanation:"その通りです。絶対誤差は測定の誤差の大きさを絶対値で表したものです。真の値が10で測定値が8なら絶対誤差は2です。単位を持った誤差の大きさそのものを示します。"},
+  {id:"1-2-54",term:"相対誤差",
+   statement:"相対誤差は絶対誤差を真の値で割った比率であり、異なる単位やスケールの測定結果を比較する際に有用な指標である。",
+   answer:true,
+   explanation:"その通りです。相対誤差=|測定値-真の値|/|真の値| で計算されます。例えば100cmのものを98cmと測れば相対誤差は2%です。スケールに依存しないため異なる量の精度比較に便利です。"},
+  {id:"1-2-55",term:"丸め誤差",
+   statement:"丸め誤差は数値を有限桁数で表現する際に生じる誤差であり、繰り返し計算で蓄積すると最終結果に大きな影響を与えることがある。",
+   answer:true,
+   explanation:"その通りです。丸め誤差はコンピュータが有限桁で浮動小数点数を表現するために生じます。例えば0.1+0.2が正確に0.3にならないのは丸め誤差の影響です。反復計算で誤差が蓄積することがあります。"},
+  {id:"1-2-56",term:"打切り誤差",
+   statement:"打切り誤差は無限の計算過程（無限級数の展開や微分積分の近似など）を有限の項で切り捨てた際に生じる誤差であり、丸め誤差とは原因が異なる。",
+   answer:true,
+   explanation:"その通りです。打切り誤差（切り捨て誤差）は数学的に無限の操作を有限で近似することで生じます。例えばπを3.14で近似するのが打切り誤差です。丸め誤差は有限桁数の表現限界から来るものです。"},
+  {id:"1-2-57",term:"因数分解",
+   statement:"因数分解は数や多項式を積の形に表す操作であり、例えばx²-5x+6は(x-2)(x-3)と因数分解できる。",
+   answer:true,
+   explanation:"その通りです。因数分解は乗算の逆操作です。x²-5x+6=(x-2)(x-3)は積が6・和が-5になる2数を求めると(-2)と(-3)であることから導けます。方程式の解や最大公約数の計算などに使われます。"},
+  {id:"1-2-58",term:"微分",
+   statement:"微分はある関数の変化率（傾き）を求める操作であり、時間に対する位置の微分は速度、速度の微分は加速度を表す。",
+   answer:true,
+   explanation:"その通りです。微分 dy/dx は関数のある点における瞬間変化率（接線の傾き）を求めます。物理では位置→速度→加速度の関係が微分で表されます。最適化問題での極値の探索にも使われます。"},
+  {id:"1-2-59",term:"積分",
+   statement:"積分は微分の逆操作であり、関数の面積や累積量を求めるための操作である。速度を時間で積分すると移動距離が得られる。",
+   answer:true,
+   explanation:"その通りです。積分（不定積分）は微分の逆操作です。定積分はある区間での関数の下側面積を求めます。速度×時間=距離という関係が積分で表されます。"},
+  {id:"1-2-60",term:"グラフ理論",
+   statement:"グラフ理論は頂点（ノード）と辺（エッジ）からなる構造を扱う数学の分野であり、ネットワークの解析・最短経路問題・スケジューリングなど多くの問題に応用される。",
+   answer:true,
+   explanation:"その通りです。グラフ理論の「グラフ」はx-yグラフではなく、頂点と辺で構成されるネットワーク構造です。インターネットの経路探索・SNSの関係分析・地図のナビゲーションなどに活用されます。"},
+  {id:"1-2-61",term:"有向グラフ",
+   statement:"有向グラフは各辺（エッジ）に方向性があるグラフであり、AからBへの辺があってもBからAへの辺があるとは限らない。",
+   answer:true,
+   explanation:"その通りです。有向グラフ（ダイグラフ）はエッジに向きがあります。Webページのリンク構造・タスクの依存関係・ソーシャルネットワークのフォロー関係などを有向グラフで表現できます。"},
+  {id:"1-2-62",term:"無向グラフ",
+   statement:"無向グラフは辺に方向がないグラフであり、二つのノード間に辺があれば両方向のアクセスが可能である。",
+   answer:true,
+   explanation:"その通りです。無向グラフは辺に方向がなく、AとBの間に辺があれば双方向に移動できます。友人関係・電力網・分子構造などを無向グラフで表現します。"},
+  {id:"1-2-63",term:"待ち行列モデル",
+   statement:"待ち行列モデルは顧客の到着とサービス提供のプロセスを数学的に表現したモデルであり、スーパーのレジやコールセンターの設計などに利用される。",
+   answer:true,
+   explanation:"その通りです。待ち行列理論（クィーイング理論）は待ち行列の形成・待ち時間・サービス効率を分析します。コールセンターの回線数設計・病院の待合室管理・コンピュータのジョブスケジューリングなどに応用されます。"},
+  {id:"1-2-64",term:"サービス時間",
+   statement:"サービス時間は待ち行列モデルにおいてシステムがひとつのリクエスト（顧客）を処理するのに要する時間であり、この時間が短いほどスループットが向上する。",
+   answer:true,
+   explanation:"その通りです。サービス時間は1件の処理にかかる時間で、短いほど単位時間あたりに処理できる件数（スループット）が増加し、待ち行列が短縮されます。"},
+  {id:"1-2-65",term:"待ち時間",
+   statement:"待ち時間は待ち行列モデルにおいてリクエストがサービスを受けるまでに待機する時間であり、到着率がサービス率を超えると待ち時間は無限大に増大する。",
+   answer:true,
+   explanation:"その通りです。到着率λがサービス率μを超える（λ>μ）と待ち行列は際限なく増加し、待ち時間は無限大に発散します。システム設計ではトラフィック強度ρ=λ/μを1未満に保つことが重要です。"},
+  {id:"1-2-66",term:"到着時間",
+   statement:"到着時間は待ち行列モデルにおいてリクエスト（顧客）がシステムに到着する時刻を示す概念であり、ネットワーク通信では平均到着率（到着間隔の逆数）で分析されることが多い。",
+   answer:true,
+   explanation:"その通りです。待ち行列理論では到着過程をポアソン過程（M/M/1モデルの「M」）としてモデル化することが多く、平均到着率λ（単位時間あたりの平均到着数）を用いて分析します。"},
+  {id:"1-2-67",term:"平均到着率",
+   statement:"平均到着率は単位時間内にシステムへ到着するリクエストの平均件数であり、この値が高いほどシステムへの負荷が大きくなる。",
+   answer:true,
+   explanation:"その通りです。平均到着率λは単位時間あたりの平均到着数です。λが大きいほどシステムへの要求が多くなり、適切なサービス能力がないと待ち行列が形成されます。"},
+  {id:"1-2-68",term:"平均サービス率",
+   statement:"平均サービス率は単位時間にサービス提供者が処理できる平均件数であり、平均到着率を下回ると待ち行列が際限なく増加する。",
+   answer:true,
+   explanation:"その通りです。平均サービス率μはサービス提供者が単位時間に処理できる平均件数です。λ（到着率）>μ（サービス率）になると処理が追いつかず待ち行列が無限に伸びます。"},
+  {id:"1-2-69",term:"最適化問題",
+   statement:"最適化問題は制約条件のもとで目的関数の最大値または最小値を求める問題であり、コスト最小化・利益最大化など実務の多くの場面で登場する。",
+   answer:true,
+   explanation:"その通りです。最適化問題は「何らかの制約のもとで目的関数を最適化する」問題です。線形計画法・整数計画法・勾配降下法など多くの解法があり、物流・生産計画・機械学習の学習などで活用されます。"},
+  {id:"1-2-70",term:"動的計画法",
+   statement:"動的計画法は複雑な問題を重複する部分問題に分割し、各部分問題の解を一度だけ計算してメモ化（保存・再利用）することで計算効率を向上させるアルゴリズム手法である。",
+   answer:true,
+   explanation:"その通りです。動的計画法（DP）の核心は「重複する部分問題の結果を保存して再利用する」ことです。フィボナッチ数列・最短経路問題・ナップサック問題・文字列のアライメントなど多くのアルゴリズム問題で使われます。"}
+];
+
+const CAT_ID="1-2", WEAK_KEY="fe_weak_v1", BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(score,total){const prev=getBest();if(!prev||score/total>prev.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total}));}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const best=getBest();document.getElementById('best-score-stat').textContent=best?`${best.score}/${best.total}`:'—';}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');if(name==='weak')renderWeakList();if(name==='start')updateStartStats();}
+function showTab(name){showView(name);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode){
+  lastMode=mode;
+  let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(QUESTIONS).slice(0,10);}
+  else{pool=shuffle(QUESTIONS);}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;
+  document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(userAnswer){
+  const q=currentQueue[currentIdx];
+  const isCorrect=(userAnswer===q.answer);
+  if(isCorrect)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(userAnswer&&!isCorrect)mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');
+  rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const total=currentQueue.length,pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;
+  updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-4 通信に関する理論 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:36px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">1-4 通信に関する理論</div>
+  <div class="header-meta">22問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 1-4</div>
+    <div class="start-title">通信に関する理論</div>
+    <div class="start-sub">基礎理論 ／ 22問収録</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">22</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">22問すべてに挑戦</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 22</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag">1-4 通信に関する理論</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:"1-4-01",term:"単方向",
+   statement:"単方向通信とはデータが送信元から送信先へ一方的に流れる通信形式であり、テレビ放送やラジオ放送がその典型例である。",
+   answer:true,
+   explanation:"その通りです。単方向（一方向）通信はデータが一方向にしか流れません。テレビ・ラジオ放送は放送局から視聴者への一方向通信です。半二重・全二重とは区別されます。"},
+  {id:"1-4-02",term:"半二重",
+   statement:"半二重通信は送信と受信を同時に行える通信方式であり、電話の通話がその代表例である。",
+   answer:false,
+   explanation:"送信と受信を同時に行えるのは全二重通信です。半二重通信は送信と受信を交互に行う方式で、無線機（トランシーバー）の通話がその代表例です。電話は全二重通信です。",
+   wrongPoint:"「送信と受信を同時に行える」が誤りです。これは全二重の説明です。半二重は送信と受信を交互に切り替えて行います。"},
+  {id:"1-4-03",term:"全二重",
+   statement:"全二重通信は送信と受信を同時に行える通信方式であり、電話の通話のように双方が同時に話せる環境がその例である。",
+   answer:true,
+   explanation:"その通りです。全二重（Full Duplex）はデータの送受信を同時に行える方式です。電話・イーサネット（スイッチングハブ使用時）・現代の無線通信などで使われています。"},
+  {id:"1-4-04",term:"AM",
+   statement:"AM（振幅変調）は搬送波の振幅を変化させることで情報を伝達する変調方式であり、主にラジオ放送（中波・短波）で利用されるがノイズの影響を受けやすい特徴がある。",
+   answer:true,
+   explanation:"その通りです。AM（Amplitude Modulation：振幅変調）は搬送波の振幅を音声信号に合わせて変化させます。構造が比較的シンプルですが、ノイズで振幅が変動しやすいという弱点があります。"},
+  {id:"1-4-05",term:"FM",
+   statement:"FM（周波数変調）は搬送波の周波数を変化させることで情報を伝達する変調方式であり、AMと比べてノイズに強く高音質な音声伝送が可能なためFMラジオ放送などに使われる。",
+   answer:true,
+   explanation:"その通りです。FM（Frequency Modulation：周波数変調）は搬送波の周波数を信号に応じて変化させます。振幅は一定に保たれるためノイズの影響を受けにくく、AMより高音質です。"},
+  {id:"1-4-06",term:"PM",
+   statement:"PM（位相変調）は搬送波の位相を変化させることで情報を伝達する変調方式であり、搬送波の振幅と周波数は一定に保たれる。",
+   answer:true,
+   explanation:"その通りです。PM（Phase Modulation：位相変調）は搬送波の位相だけを変化させます。振幅と周波数は変わりません。デジタル通信でよく使われるPSK（位相偏移変調）の基礎となります。"},
+  {id:"1-4-07",term:"PCM",
+   statement:"PCM（パルス符号変調）はアナログ信号をサンプリング・量子化・符号化の3段階でデジタル信号に変換する技術であり、CDや電話の音声デジタル化に使われる。",
+   answer:true,
+   explanation:"その通りです。PCM（Pulse Code Modulation）はアナログ→デジタル変換の基本技術です。①サンプリング（一定間隔で値を取得）②量子化（値を離散値に近似）③符号化（2進数に変換）の3ステップで処理します。"},
+  {id:"1-4-08",term:"FDM",
+   statement:"FDM（周波数分割多重）は複数の信号を異なる周波数帯域に割り当てて同一伝送路で同時に送る技術であり、ラジオ放送や電話の多重化に利用される。",
+   answer:true,
+   explanation:"その通りです。FDM（Frequency Division Multiplexing）は伝送帯域を複数の周波数帯に分割し、各チャネルに割り当てます。アナログ電話の多重化・ラジオ放送・ケーブルテレビなどで使われます。"},
+  {id:"1-4-09",term:"TDM",
+   statement:"TDM（時分割多重）は伝送路を時間で分割し複数の信号が順番に時間スロットを使って同一伝送路を共有する技術であり、デジタル電話通信などに利用される。",
+   answer:true,
+   explanation:"その通りです。TDM（Time Division Multiplexing）は時間軸を細かく分割し、各チャネルに時間スロットを割り当てます。デジタル電話（ISDN・光通信）などで広く使われています。"},
+  {id:"1-4-10",term:"CRC",
+   statement:"CRC（巡回冗長検査）はデータを多項式で割った余りを検査値として付加し、受信側で同じ計算を行って一致を確認することでデータ誤りを検出する手法である。",
+   answer:true,
+   explanation:"その通りです。CRC（Cyclic Redundancy Check）は送信前にデータからCRC値を計算して付加し、受信側でも同じ計算をして照合します。パリティチェックより強力な誤り検出能力を持ちます。"},
+  {id:"1-4-11",term:"ハミング符号",
+   statement:"ハミング符号はデータに複数のパリティビットを付加することで1ビットの誤りを検出するだけでなく訂正も可能な誤り訂正符号である。",
+   answer:true,
+   explanation:"その通りです。ハミング符号は特定の位置にパリティビットを配置することで1ビットの誤りを訂正（ECC）できます。2ビットの誤りは検出のみ可能です。メモリのECC機能などに応用されています。"},
+  {id:"1-4-12",term:"パリティチェック",
+   statement:"パリティチェックはデータのビット列に1つのパリティビットを付加して誤りを検出する手法であり、2ビット以上の誤りを検出し訂正する能力がある。",
+   answer:false,
+   explanation:"パリティチェックは1ビットの誤りは検出できますが、2ビット同時エラーは検出できず、また誤りを訂正する能力もありません。「2ビット以上の誤りを検出し訂正する能力がある」は誤りです。",
+   wrongPoint:"「2ビット以上の誤りを検出し訂正する能力がある」が誤りです。パリティチェックは1ビットの誤り検出のみ可能で、訂正機能はありません。"},
+  {id:"1-4-13",term:"ECC",
+   statement:"ECC（誤り訂正符号）はデータの誤りを検出するだけでなく自動的に訂正する機能を持つ技術であり、ECCメモリはサーバやデータセンターで広く使われている。",
+   answer:true,
+   explanation:"その通りです。ECC（Error Correction Code）はデータの誤りを検出し自動訂正できます。ECCメモリは1ビット誤りを訂正・2ビット誤りを検出でき、高信頼性が要求されるサーバで広く採用されています。"},
+  {id:"1-4-14",term:"チェックサム",
+   statement:"チェックサムはデータブロックの各バイトを加算した合計値を検査値として使用し、送受信前後でその値を比較することでデータの誤りを検出する手法である。",
+   answer:true,
+   explanation:"その通りです。チェックサムはデータの合計値（または剰余など）を検査値として付加します。シンプルで計算コストが低い反面、CRCより誤り検出能力は低いですが、ネットワークプロトコルやファイル検証に広く使われます。"},
+  {id:"1-4-15",term:"ビット同期",
+   statement:"ビット同期とはデジタル通信において受信側が送信されたデータのビット境界（各ビットの開始と終了のタイミング）を正確に識別する技術である。",
+   answer:true,
+   explanation:"その通りです。ビット同期は受信機が送信クロックに同期してビットを正確に読み取るための技術です。同期が乱れるとビットのサンプリングタイミングがずれてデータを誤って読み取ります。"},
+  {id:"1-4-16",term:"キャラクター同期",
+   statement:"キャラクター同期はデータ通信において特定の同期文字（SYN文字など）を使って文字（キャラクター）単位の送受信タイミングを合わせる技術で、ベーシック手順などで使われる。",
+   answer:true,
+   explanation:"その通りです。キャラクター同期（文字同期）は送受信双方が同じ同期文字を認識することで文字の境界を特定します。BSC（バイナリ同期通信）などの文字同期プロトコルで使用されます。"},
+  {id:"1-4-17",term:"フラグ同期",
+   statement:"フラグ同期はデータ通信においてビットパターン「01111110」を開始・終了フラグとして使いフレームの境界を識別する同期技術で、HDLCプロトコルなどで使われる。",
+   answer:true,
+   explanation:"その通りです。フラグ同期はHDLC・PPPなどのビット指向プロトコルで使われます。フレームの先頭と末尾に「01111110」のフラグを挿入し、データ中に同じパターンが出ないようビットスタッフィングも行います。"},
+  {id:"1-4-18",term:"調歩同期",
+   statement:"調歩同期（非同期通信）はスタートビットとストップビットで1文字ずつフレーム化してデータを送受信する方式で、送受信間でクロック信号を共有する必要がない。",
+   answer:true,
+   explanation:"その通りです。調歩同期（Asynchronous Communication）はスタートビット（通信開始を通知）とストップビット（通信終了を通知）を各文字に付加することで、クロック共有なしで文字境界を識別します。シリアル通信（RS-232C）などで使われます。"},
+  {id:"1-4-19",term:"スタートビット",
+   statement:"スタートビットは調歩同期方式において1文字分のデータ送信の終了を示すために付加されるビットである。",
+   answer:false,
+   explanation:"スタートビットは1文字分のデータ送信の「開始」を示すビットです。送信の「終了」を示すのはストップビットです。",
+   wrongPoint:"「送信の終了を示す」が誤りです。スタートビットは送信の「開始」を示します。終了を示すのはストップビットです。"},
+  {id:"1-4-20",term:"ストップビット",
+   statement:"ストップビットは調歩同期方式において1文字分のデータ送信の終了を示すために付加されるビットであり、スタートビットと対をなして1文字のフレームを形成する。",
+   answer:true,
+   explanation:"その通りです。ストップビットは1文字分のデータ末尾に付加され、受信側に文字受信の完了を知らせます。スタートビット→データビット（5〜8ビット）→パリティビット（省略可）→ストップビットの順で1文字のフレームが構成されます。"},
+  {id:"1-4-21",term:"SYN同期",
+   statement:"SYN同期はベーシック手順（BSC）などで使われる文字同期方式で、SYN文字と呼ばれる特定の制御文字を使ってブロック単位のデータ同期をとる技術である。",
+   answer:true,
+   explanation:"その通りです。SYN同期はキャラクター同期の一種で、SYN（同期）文字を1つ以上連続して送信することで受信側に同期を取らせます。ベーシック手順（BSC）プロトコルで使われています。"},
+  {id:"1-4-22",term:"フレーム同期",
+   statement:"フレーム同期はデータ通信においてフレーム単位のデータ送受信タイミングを合わせる技術で、動画データの映像と音声の同期にも用いられる。",
+   answer:true,
+   explanation:"その通りです。フレーム同期はデータのフレーム（一定量のデータ単位）の境界を正確に識別する技術です。デジタル通信プロトコルでのデータフレーム識別だけでなく、動画の映像・音声の同期（リップシンク）にも重要です。"}
+];
+
+const CAT_ID="1-4",WEAK_KEY="fe_weak_v1",BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(score,total){const prev=getBest();if(!prev||score/total>prev.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total}));}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const best=getBest();document.getElementById('best-score-stat').textContent=best?`${best.score}/${best.total}`:'—';}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');if(name==='weak')renderWeakList();if(name==='start')updateStartStats();}
+function showTab(name){showView(name);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode){
+  lastMode=mode;let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(QUESTIONS).slice(0,10);}
+  else{pool=shuffle(QUESTIONS);}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(userAnswer){
+  const q=currentQueue[currentIdx],isCorrect=(userAnswer===q.answer);
+  if(isCorrect)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(userAnswer&&!isCorrect)mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const total=currentQueue.length,pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>
