@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-1 離散数学 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;--gold:#f59e0b;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+
+  /* START */
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:36px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+
+  /* QUIZ */
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* SCORE */
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+
+  /* WEAK LIST */
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">1-1 離散数学</div>
+  <div class="header-meta">34問</div>
+</div>
+
+<!-- START -->
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 1-1</div>
+    <div class="start-title">離散数学</div>
+    <div class="start-sub">基礎理論 ／ 34問収録</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">34</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')">
+      <div class="mode-icon">📚</div>
+      <div class="mode-name">全問モード</div>
+      <div class="mode-desc">34問すべてに挑戦</div>
+    </button>
+    <button class="mode-btn" onclick="startQuiz('random')">
+      <div class="mode-icon">🎲</div>
+      <div class="mode-name">ランダム10問</div>
+      <div class="mode-desc">ランダムに10問出題</div>
+    </button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled>
+      <div class="mode-icon">🎯</div>
+      <div class="mode-name">苦手問題モード</div>
+      <div class="mode-desc">間違えた問題を再出題</div>
+    </button>
+    <button class="mode-btn" onclick="showTab('weak')">
+      <div class="mode-icon">📋</div>
+      <div class="mode-name">苦手一覧</div>
+      <div class="mode-desc">記録を確認する</div>
+    </button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 34</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag">1-1 離散数学</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none">
+      <strong>❌ 誤っている箇所</strong>
+      <span id="wrong-point-text">—</span>
+    </div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<!-- SCORE -->
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0">
+      <div class="score-num" id="score-num">0/0</div>
+    </div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<!-- WEAK LIST -->
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  QUESTION DATA — 1-1 離散数学 34問
+// ══════════════════════════════════════════════
+const QUESTIONS = [
+  {
+    id:"1-1-01", term:"基数",
+    statement:"基数とは数を表現する際の「基」となる数であり、10進数の基数は10、2進数の基数は2、16進数の基数は16である。",
+    answer:true,
+    explanation:"その通りです。基数（Radix）は各進数の底となる数で、10進数は0〜9の10種類の数字を使うため基数10、2進数は0と1の2種類なので基数2、16進数は0〜F の16種類なので基数16です。"
+  },
+  {
+    id:"1-1-02", term:"2の補数",
+    statement:"2の補数は正の整数だけを表現するための2進数表現方式であり、負の数を表すことはできない。",
+    answer:false,
+    explanation:"2の補数は負の整数も含む整数を表現するための方式です。ある数を反転させて1を加えることで負の数を表現でき、コンピュータの加算回路で正負の計算を統一的に処理できます。",
+    wrongPoint:"「正の整数だけを表現する」「負の数を表すことはできない」が誤りです。2の補数は負の数も表現できます。"
+  },
+  {
+    id:"1-1-03", term:"固定小数点数",
+    statement:"固定小数点数は小数点の位置が決まった数値形式であり、浮動小数点数に比べてオーバーヘッドが少なく、金融や組み込みシステムで利用されることが多い。",
+    answer:true,
+    explanation:"その通りです。固定小数点数は小数部と整数部の位置があらかじめ固定されており、浮動小数点数に比べて計算が単純でオーバーヘッドが小さいため、精度が求められる金融計算や小規模な組み込みシステムで利用されます。"
+  },
+  {
+    id:"1-1-04", term:"単精度浮動小数点数",
+    statement:"単精度浮動小数点数は64ビットのメモリを使用し、倍精度浮動小数点数の半分の精度を持つ。",
+    answer:false,
+    explanation:"単精度浮動小数点数は32ビット（4バイト）を使用します。64ビットを使用するのは倍精度浮動小数点数です。",
+    wrongPoint:"「64ビットのメモリを使用」が誤りです。単精度は32ビット、倍精度が64ビットです。"
+  },
+  {
+    id:"1-1-05", term:"倍精度浮動小数点数",
+    statement:"倍精度浮動小数点数は64ビットを使用し、単精度の32ビットより高い精度で数値を表現できるため、科学技術計算や経済データの分析などで活用される。",
+    answer:true,
+    explanation:"その通りです。倍精度は64ビットを使用して約15〜16桁の有効数字を扱えるため、精度が求められる科学技術計算や金融システムで広く使われます。"
+  },
+  {
+    id:"1-1-06", term:"仮数部",
+    statement:"浮動小数点数の仮数部は数値のスケール（大きさ）を指数で示す部分であり、指数部とは異なりデータの精度には直接関係しない。",
+    answer:false,
+    explanation:"仮数部は数値の精度（有効数字）を決める部分です。数値のスケールを示すのは指数部です。仮数部のビット数が多いほど高精度な表現が可能になります。",
+    wrongPoint:"「仮数部は数値のスケールを示す部分」「精度には直接関係しない」が誤りです。仮数部は数値の精度を決める部分で、指数部がスケールを示します。"
+  },
+  {
+    id:"1-1-07", term:"指数部",
+    statement:"浮動小数点数の指数部は数値の大きさやスケールを示す部分であり、非常に大きな数や小さな数を効率的に表現することを可能にする。",
+    answer:true,
+    explanation:"その通りです。指数部は基数に対する乗数（指数）を格納し、1.23×10³の「10³」に相当する部分です。これにより非常に大きな数や非常に小さな数を効率的に表現できます。"
+  },
+  {
+    id:"1-1-08", term:"BCD",
+    statement:"BCD（二進化十進数）は十進数の各桁を4ビットの二進数で表す方式であり、デジタル表示装置や金融計算で利用される。",
+    answer:true,
+    explanation:"その通りです。BCDは十進数の0〜9それぞれを4ビットの2進数で表現する方式です。十進数の処理が自然に行えるため、デジタル時計・電卓・金融システムなどで利用されます。"
+  },
+  {
+    id:"1-1-09", term:"パック10進数",
+    statement:"パック10進数は1バイトに十進数の1桁を格納するデータ形式であり、ゾーン10進数よりも記憶効率が低い。",
+    answer:false,
+    explanation:"パック10進数は1バイトに十進数の2桁を格納するデータ形式です。ゾーン10進数は1バイトに1桁しか格納できないため、パック10進数の方が記憶効率が高いです。",
+    wrongPoint:"「1バイトに1桁を格納する」「ゾーン10進数より記憶効率が低い」が誤りです。パック10進数は1バイトに2桁格納でき、ゾーン10進数より効率的です。"
+  },
+  {
+    id:"1-1-10", term:"論理シフト",
+    statement:"論理シフトでは符号ビットを考慮せずにビット列をずらし、左シフトで右端に0を補充するため、符号なし整数の2倍・半分の計算に利用される。",
+    answer:true,
+    explanation:"その通りです。論理シフトは符号を無視してすべてのビットをシフトし、空いた位置には0を補充します。左に1ビットシフトすると値は2倍、右に1ビットシフトすると半分になります（符号なし）。"
+  },
+  {
+    id:"1-1-11", term:"算術シフト",
+    statement:"算術シフトは符号付き整数のシフト操作で、右シフト時に符号ビット（最上位ビット）を保持したまま伸長するため、負の数を正しく2で割ることができる。",
+    answer:true,
+    explanation:"その通りです。算術右シフトでは符号ビット（正なら0、負なら1）を保持して伸長するため、符号付き整数の正確な2除算に使えます。論理シフトとの違いはこの符号ビット保持にあります。"
+  },
+  {
+    id:"1-1-12", term:"桁落ち",
+    statement:"桁落ちとは、絶対値がほぼ等しい二つの数の差を計算した際に有効桁数が減少し重要な情報が失われる現象であり、大きな数と小さな数の加算では発生しない。",
+    answer:false,
+    explanation:"桁落ちは「値がほぼ等しい2数の差」を計算した際に有効桁数が激減する現象であることは正しいですが、「大きな数と小さな数の加算では発生しない」という部分が不正確です。情報落ちは大小の数の加算で発生しますが、桁落ち自体もさまざまな演算で注意が必要です。",
+    wrongPoint:"「大きな数と小さな数の加算では発生しない」が誤りです。桁落ちはほぼ等しい値の差を求めるときに起きますが、数値誤差全般に注意が必要です。"
+  },
+  {
+    id:"1-1-13", term:"情報落ち",
+    statement:"情報落ちとは、絶対値の大きな数に絶対値の小さな数を加算した際に、小さな数が結果に反映されなくなる現象である。",
+    answer:true,
+    explanation:"その通りです。例えば1,000,000と0.0001を加算する際、コンピュータの精度の限界により0.0001の情報が失われて1,000,000のままになることがあります。これが情報落ちです。"
+  },
+  {
+    id:"1-1-14", term:"オーバーフロー",
+    statement:"オーバーフローとはデータ型の最小値を下回る演算結果が発生した場合に起こる現象であり、8ビット符号なし整数の場合は0未満になると発生する。",
+    answer:false,
+    explanation:"設問の説明は「アンダーフロー」の説明に近い部分があります。オーバーフローはデータ型の「最大値を超える」演算結果が発生した場合に起こる現象です。8ビット符号なし整数（0〜255）で255を超えると発生します。",
+    wrongPoint:"「最小値を下回る」が誤りです。オーバーフローは「最大値を超える」場合に発生します。最小値を下回る場合はアンダーフローと呼びます。"
+  },
+  {
+    id:"1-1-15", term:"アンダーフロー",
+    statement:"アンダーフローとは浮動小数点数の演算結果が表現可能な最小の絶対値より小さくなり、0として扱われてしまう現象である。",
+    answer:true,
+    explanation:"その通りです。浮動小数点数で非常に小さな値を扱う場合、表現可能な最小値を下回ると0として処理されます。これをアンダーフローといい、科学計算などで誤差の原因となります。"
+  },
+  {
+    id:"1-1-16", term:"単精度",
+    statement:"単精度は32ビットで数値を表現し、約7桁の有効数字を持つ浮動小数点数形式である。",
+    answer:true,
+    explanation:"その通りです。単精度（Single Precision）は IEEE 754 規格で32ビット（符号1ビット・指数部8ビット・仮数部23ビット）を使用し、約7桁の有効数字を表現できます。"
+  },
+  {
+    id:"1-1-17", term:"倍精度",
+    statement:"倍精度は128ビットで数値を表現し、単精度の4倍の精度を持つ浮動小数点数形式である。",
+    answer:false,
+    explanation:"倍精度（Double Precision）は64ビットを使用します。128ビットは四倍精度（Quad Precision）です。倍精度は約15〜16桁の有効数字を持ち、単精度の約2倍のビット数を使用します。",
+    wrongPoint:"「128ビット」「単精度の4倍の精度」が誤りです。倍精度は64ビットで、単精度（32ビット）の2倍のビット数です。"
+  },
+  {
+    id:"1-1-18", term:"ベン図",
+    statement:"ベン図は集合の関係を視覚的に表現する図であり、円の重なり部分は二つの集合に共通する要素（積集合）を示す。",
+    answer:true,
+    explanation:"その通りです。ベン図では各集合を円で表し、円の重なり部分が積集合（共通要素）を示します。数学・論理学の学習やデータ分析における集合関係の可視化に広く使われます。"
+  },
+  {
+    id:"1-1-19", term:"和集合",
+    statement:"和集合（A∪B）は集合Aと集合Bの両方に含まれる要素だけを集めたものであり、どちらか一方にしか含まれない要素は含まない。",
+    answer:false,
+    explanation:"和集合はAまたはBの「いずれかに含まれる全ての要素」の集合です。設問の説明は積集合（A∩B）の説明です。和集合はAのみの要素・Bのみの要素・両方に共通する要素、すべてを含みます。",
+    wrongPoint:"「両方に含まれる要素だけを集めたもの」「どちらか一方にしか含まれない要素は含まない」が誤りです。これは積集合の説明です。和集合はA・Bいずれかに含まれる全要素を集めたものです。"
+  },
+  {
+    id:"1-1-20", term:"積集合",
+    statement:"積集合（A∩B）は集合Aと集合Bの両方に共通して含まれる要素からなる集合である。",
+    answer:true,
+    explanation:"その通りです。積集合はAとBの共通部分で、{1,2,3}∩{2,3,4}＝{2,3}のようにどちらの集合にも存在する要素だけを集めます。"
+  },
+  {
+    id:"1-1-21", term:"補集合",
+    statement:"補集合はある集合Aに対して、全体集合Uに含まれるがAには含まれない要素の集まりである。",
+    answer:true,
+    explanation:"その通りです。補集合はU（全体集合）からA（部分集合）の要素を取り除いた残りの部分です。Aの補集合はĀ（Aバー）と表記されます。"
+  },
+  {
+    id:"1-1-22", term:"部分集合",
+    statement:"集合Bが集合Aの部分集合であるとは、BのすべてのB要素がAにも含まれていることを意味し、A自身もAの部分集合に含まれる。",
+    answer:true,
+    explanation:"その通りです。B⊆Aとは「BのすべてのB要素がAにも存在する」ことを意味します。またすべての集合は自分自身の部分集合でもあり（A⊆A）、空集合も任意の集合の部分集合です。"
+  },
+  {
+    id:"1-1-23", term:"真",
+    statement:"論理学における「真（True）」とはある命題や条件が確実に成立していることを示す値であり、プログラミングでは条件分岐などに用いられる。",
+    answer:true,
+    explanation:"その通りです。真（True）は命題が成立している状態を示す論理値です。プログラミングでは if 文などの条件式が真のときに処理が実行されます。"
+  },
+  {
+    id:"1-1-24", term:"偽",
+    statement:"論理学における「偽（False）」とはある命題や条件が成立していないことを示す値であり、「真」と対をなす二値論理の一方である。",
+    answer:true,
+    explanation:"その通りです。偽（False）は命題が成立していない状態を示す論理値です。真偽の二値は論理演算・プログラミングの条件判断・デジタル回路設計の基礎となっています。"
+  },
+  {
+    id:"1-1-25", term:"命題論理",
+    statement:"命題論理では真偽が明確に定まる文（命題）を扱い、AND・OR・NOTなどの論理演算子を使って複数の命題を組み合わせることができる。",
+    answer:true,
+    explanation:"その通りです。命題論理は「今日は晴れです」のような真偽が確定できる文を基本単位とし、AND（論理積）・OR（論理和）・NOT（否定）などで命題を組み合わせる論理体系です。"
+  },
+  {
+    id:"1-1-26", term:"否定",
+    statement:"論理演算における否定（NOT）は入力の真偽を反転させる操作であり、真を入力すると偽を、偽を入力すると真を出力する。",
+    answer:true,
+    explanation:"その通りです。否定（NOT）演算は真偽を反転させます。真理値表でNOT(True)=False、NOT(False)=Trueです。"
+  },
+  {
+    id:"1-1-27", term:"論理和",
+    statement:"論理和（OR）演算は二つの入力のうち少なくとも一方が真であれば真を返し、両方が偽のときだけ偽を返す。",
+    answer:true,
+    explanation:"その通りです。論理和（OR）の真理値表はA=偽・B=偽のときのみ結果が偽で、それ以外（A=真またはB=真またはその両方）は真になります。"
+  },
+  {
+    id:"1-1-28", term:"論理積",
+    statement:"論理積（AND）演算は二つの入力が両方とも真のときだけ真を返し、いずれか一方でも偽であれば偽を返す。",
+    answer:true,
+    explanation:"その通りです。論理積（AND）は両入力が真のときだけ結果が真になります。A=真・B=真のとき真、それ以外は偽です。"
+  },
+  {
+    id:"1-1-29", term:"排他的論理和",
+    statement:"排他的論理和（XOR）は二つの入力が同じ値のとき真を返し、異なる値のとき偽を返す演算である。",
+    answer:false,
+    explanation:"排他的論理和（XOR）は入力が「異なる」ときに真を返し、「同じ」ときに偽を返します。設問は真偽が逆です。A=真・B=偽なら真、A=偽・B=真なら真、両方同じなら偽です。",
+    wrongPoint:"真偽の説明が逆です。XORは入力が「異なる」ときに真、「同じ」ときに偽を返します。"
+  },
+  {
+    id:"1-1-30", term:"否定論理和",
+    statement:"否定論理和（NOR）はOR演算の結果を否定したものであり、両入力が偽のときだけ真を出力し、それ以外は偽を出力する。",
+    answer:true,
+    explanation:"その通りです。NOR はNOT(OR)です。ORは少なくとも一方が真なら真ですが、その否定であるNORは両方が偽（0）のときだけ真（1）を出力します。"
+  },
+  {
+    id:"1-1-31", term:"否定論理積",
+    statement:"否定論理積（NAND）はAND演算の結果を否定したものであり、両入力が真のときだけ偽を出力し、それ以外は真を出力する。",
+    answer:true,
+    explanation:"その通りです。NANDはNOT(AND)です。ANDは両方真のときだけ真ですが、その否定であるNANDは両方が真(1)のときだけ偽(0)を出力し、それ以外は真(1)を出力します。"
+  },
+  {
+    id:"1-1-32", term:"論理関数",
+    statement:"論理関数は真理値（真または偽）を入力として受け取り別の真理値を出力する数学的な関数であり、AND・ORなどの基本演算で構成される。",
+    answer:true,
+    explanation:"その通りです。論理関数は論理変数を入力として論理値を返す関数です。AND・OR・NOT などの基本論理演算を組み合わせて複雑な論理回路の動作を数式で表現できます。"
+  },
+  {
+    id:"1-1-33", term:"分配則",
+    statement:"論理演算における分配則の一つとして、A ∧ (B ∨ C) = (A ∧ B) ∨ (A ∧ C) が成り立つ。",
+    answer:true,
+    explanation:"その通りです。分配則はANDとORの組み合わせに適用できる規則で、A∧(B∨C)=(A∧B)∨(A∧C) が成り立ちます。論理式の簡略化やデジタル回路設計で活用されます。"
+  },
+  {
+    id:"1-1-34", term:"ド・モルガンの法則",
+    statement:"ド・モルガンの法則によれば「NOT(A AND B) = (NOT A) OR (NOT B)」および「NOT(A OR B) = (NOT A) AND (NOT B)」が成り立つ。",
+    answer:true,
+    explanation:"その通りです。ド・モルガンの法則は2つのルールから成ります。①AND全体の否定はそれぞれの否定のOR：¬(A∧B)=¬A∨¬B、②OR全体の否定はそれぞれの否定のAND：¬(A∨B)=¬A∧¬B。論理式の変換・回路設計で頻繁に使われます。"
+  }
+];
+
+// ══════════════════════════════════════════════
+//  APP
+// ══════════════════════════════════════════════
+const CAT_ID = "1-1";
+const WEAK_KEY = "fe_weak_v1";
+const BEST_KEY = "fe_best_" + CAT_ID;
+
+let currentQueue=[], currentIdx=0, sessionScore=0, sessionResults=[], lastMode='all';
+let weakMap = loadWeak();
+
+function loadWeak(){ try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};} }
+function saveWeak(){ try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{} }
+function addWeak(q){ if(!weakMap[q.id]) weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID}; weakMap[q.id].count++; saveWeak(); }
+function clearWeak(){
+  if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;
+  Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);
+  saveWeak(); updateStartStats(); renderWeakList();
+}
+
+function getWeakForCat(){ return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID); }
+
+function getBest(){ try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;} }
+function saveBest(score,total){ const prev=getBest(); if(!prev||score/total>prev.pct) localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total})); }
+
+function updateStartStats(){
+  const wc = getWeakForCat().length;
+  document.getElementById('weak-count-stat').textContent = wc;
+  document.getElementById('weak-mode-btn').disabled = wc===0;
+  const best=getBest();
+  document.getElementById('best-score-stat').textContent = best?`${best.score}/${best.total}`:'—';
+}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(name==='weak') renderWeakList();
+  if(name==='start') updateStartStats();
+}
+function showTab(name){ showView(name); }
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function startQuiz(mode){
+  lastMode=mode;
+  let pool;
+  if(mode==='weak'){
+    const wids=new Set(getWeakForCat().map(([k])=>k));
+    pool=QUESTIONS.filter(q=>wids.has(q.id));
+  } else if(mode==='random'){
+    pool=shuffle(QUESTIONS).slice(0,10);
+  } else {
+    pool=shuffle(QUESTIONS);
+  }
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool; currentIdx=0; sessionScore=0; sessionResults=[];
+  showView('quiz'); renderQuestion();
+}
+
+function renderQuestion(){
+  const q=currentQueue[currentIdx], total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;
+  document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+
+function answer(userAnswer){
+  const q=currentQueue[currentIdx];
+  const isCorrect=(userAnswer===q.answer);
+  if(isCorrect) sessionScore++; else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'), bb=document.getElementById('btn-batsu');
+  mb.disabled=true; bb.disabled=true;
+  if(q.answer){ mb.className='btn-circle correct-btn flash-correct'; }
+  else { bb.className='btn-circle wrong-btn flash-correct'; }
+  if(userAnswer&&!isCorrect) mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect) bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');
+  rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){
+    document.getElementById('wrong-point').style.display='block';
+    document.getElementById('wrong-point-text').textContent=q.wrongPoint;
+  }
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+
+function nextQuestion(){
+  currentIdx++;
+  if(currentIdx>=currentQueue.length) showScore(); else renderQuestion();
+}
+
+function showScore(){
+  const total=currentQueue.length, pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);
+  showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){
+    html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;
+    wrongs.forEach(r=>{
+      html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;
+    });
+    html+='</div>';
+  }
+  document.getElementById('wrong-summary').innerHTML=html;
+  updateStartStats();
+}
+
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item">
+    <div class="wi-term">${w.term}</div>
+    <div class="wi-count">間違い ${w.count}回</div>
+    <div class="wi-stmt">${w.statement}</div>
+  </div>`).join('');
+}
+
+updateStartStats();
+</script>
+</body>
+</html>
