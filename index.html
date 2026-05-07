@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基本情報技術者 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root {
+    --bg:#0d0f14; --surface:#161a22; --surface2:#1e2330;
+    --border:#2a3040; --accent:#4f9cf9; --accent2:#7c5cbf;
+    --text:#e2e8f0; --text2:#8892a4; --text3:#4a5568;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;padding:32px 16px 80px;}
+  .wrap{max-width:860px;margin:0 auto;}
+  .hero{text-align:center;padding:48px 0 40px;}
+  .hero-title{font-size:42px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;}
+  .hero-title span{color:var(--accent);}
+  .hero-sub{color:var(--text2);font-size:16px;}
+  .total-badge{display:inline-block;margin-top:16px;background:rgba(79,156,249,.1);border:1px solid rgba(79,156,249,.3);color:var(--accent);font-size:14px;padding:6px 18px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
+
+  .cat-section{margin-bottom:36px;}
+  .cat-header{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+  .cat-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;}
+  .cat-name{font-size:20px;font-weight:900;}
+  .cat-total{font-size:12px;color:var(--text3);margin-left:auto;}
+
+  .quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .2s;text-decoration:none;display:block;position:relative;overflow:hidden;}
+  .quiz-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(79,156,249,.05),transparent);opacity:0;transition:.2s;}
+  .quiz-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .quiz-card:hover::before{opacity:1;}
+  .qc-section{font-size:11px;color:var(--accent2);font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+  .qc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .qc-count{font-size:12px;color:var(--text3);}
+  .qc-done{position:absolute;top:10px;right:12px;font-size:18px;}
+
+  .footer{text-align:center;margin-top:48px;color:var(--text3);font-size:12px;}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media (max-width: 480px){
+    body{padding:16px 12px 60px;}
+    .start-title{font-size:24px;}
+    .start-hero{padding:24px 0 20px;}
+    .start-stats{gap:10px;}
+    .stat-card{padding:12px 16px;}
+    .stat-num{font-size:22px;}
+    .section-btns{gap:6px;}
+    .sec-btn{font-size:12px;padding:5px 10px;}
+    .mode-btn{padding:14px 12px;}
+    .mode-icon{font-size:20px;margin-bottom:6px;}
+    .mode-name{font-size:14px;}
+    .question-card{padding:20px 16px;}
+    .q-term{font-size:20px;}
+    .q-statement{font-size:15px;line-height:1.7;padding:12px 14px;}
+    .btn-circle{font-size:28px;padding:14px 10px;}
+    .result-card{padding:16px;}
+    .result-verdict{font-size:16px;}
+    .result-explanation{font-size:13px;}
+    .wrong-point{font-size:12px;}
+    .score-ring{width:110px;height:110px;}
+    .score-ring::before{inset:12px;}
+    .score-num{font-size:24px;}
+    .score-message{font-size:20px;}
+    .score-actions{flex-direction:column;align-items:center;}
+    .btn-primary,.btn-outline{width:100%;max-width:280px;text-align:center;}
+    .header-title{font-size:14px;}
+    .wi-term{font-size:15px;}
+    .weak-title{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-title">基本情報技術者<br><span>○×クイズ</span></div>
+    <div class="hero-sub">シラバス9.2 対応 ／ 全カテゴリ収録</div>
+    <div class="total-badge" id="total-badge">問題を読み込み中...</div>
+  </div>
+
+  <div id="cat-container"></div>
+
+  <div class="footer">基本情報技術者試験.com シラバス9.2 準拠</div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    num:"1", name:"基礎理論",
+    files:[
+      {id:"1-1", name:"離散数学",           count:34, file:"quiz_cat1_1.html"},
+      {id:"1-2", name:"応用数学",           count:70, file:"quiz_cat1_2.html"},
+      {id:"1-3", name:"情報に関する理論",   count:63, file:"quiz_cat1_3.html"},
+      {id:"1-4", name:"通信に関する理論",   count:22, file:"quiz_cat1_4.html"},
+      {id:"1-5", name:"計測・制御に関する理論", count:24, file:"quiz_cat1_5.html"},
+    ]
+  },
+  {
+    num:"2", name:"アルゴリズムとプログラミング",
+    files:[
+      {id:"2",   name:"アルゴリズムとプログラミング", count:146, file:"quiz_cat2.html"},
+    ]
+  },
+  {
+    num:"3", name:"コンピュータ構成要素",
+    files:[
+      {id:"3",   name:"コンピュータ構成要素", count:190, file:"quiz_cat3.html"},
+    ]
+  },
+  {
+    num:"4", name:"システム構成要素",
+    files:[
+      {id:"4",   name:"システム構成要素", count:89, file:"quiz_cat4.html"},
+    ]
+  },
+  {
+    num:"5", name:"ソフトウェア",
+    files:[
+      {id:"5",   name:"ソフトウェア", count:174, file:"quiz_cat5.html"},
+    ]
+  },
+  {
+    num:"6", name:"ハードウェア",
+    files:[
+      {id:"6",   name:"ハードウェア", count:22, file:"quiz_cat6.html"},
+    ]
+  },
+  {
+    num:"7", name:"ユーザーインタフェース",
+    files:[
+      {id:"7",   name:"ユーザーインタフェース", count:75, file:"quiz_cat7.html"},
+    ]
+  },
+  {
+    num:"8", name:"情報メディア",
+    files:[
+      {id:"8",   name:"情報メディア", count:59, file:"quiz_cat8.html"},
+    ]
+  },
+  {
+    num:"9", name:"データベース",
+    files:[
+      {id:"9-1", name:"データベース方式",   count:36, file:"quiz_cat9_1.html"},
+      {id:"9-2", name:"データベース設計",   count:25, file:"quiz_cat9_2.html"},
+      {id:"9-3", name:"データ操作",         count:30, file:"quiz_cat9_3.html"},
+      {id:"9-4", name:"トランザクション処理", count:25, file:"quiz_cat9_4.html"},
+      {id:"9-5", name:"データベース応用",   count:23, file:"quiz_cat9_5.html"},
+    ]
+  },
+  {
+    num:"10", name:"ネットワーク",
+    files:[
+      {id:"10-1", name:"ネットワーク方式",    count:39, file:"quiz_cat10_1.html"},
+      {id:"10-2", name:"データ通信と制御",    count:53, file:"quiz_cat10_2.html"},
+      {id:"10-3", name:"通信プロトコル",      count:41, file:"quiz_cat10_3.html"},
+      {id:"10-4", name:"ネットワーク管理",    count:25, file:"quiz_cat10_4.html"},
+      {id:"10-5", name:"ネットワーク応用",    count:48, file:"quiz_cat10_5.html"},
+    ]
+  },
+];
+
+const STORAGE_KEY = "fe_quiz_progress_v1";
+function getProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}; }catch{ return {}; } }
+
+function render(){
+  const prog = getProgress();
+  let total = 0;
+  const container = document.getElementById('cat-container');
+  CATEGORIES.forEach(cat=>{
+    const sec = document.createElement('div');
+    sec.className = 'cat-section';
+    const catTotal = cat.files.reduce((s,f)=>s+f.count,0);
+    total += catTotal;
+    sec.innerHTML = `<div class="cat-header">
+      <span class="cat-num">CAT ${cat.num}</span>
+      <span class="cat-name">${cat.name}</span>
+      <span class="cat-total">${catTotal}問</span>
+    </div><div class="quiz-grid" id="grid-${cat.num}"></div>`;
+    container.appendChild(sec);
+    const grid = document.getElementById('grid-'+cat.num);
+    cat.files.forEach(f=>{
+      const done = prog[f.id];
+      const a = document.createElement('a');
+      a.className = 'quiz-card';
+      a.href = f.file;
+      a.innerHTML = `<div class="qc-section">${f.id}</div>
+        <div class="qc-name">${f.name}</div>
+        <div class="qc-count">${f.count}問</div>
+        ${done ? '<div class="qc-done">✅</div>' : ''}`;
+      grid.appendChild(a);
+    });
+  });
+  document.getElementById('total-badge').textContent = `全 ${total} 問収録`;
+}
+render();
+</script>
+</body>
+</html>
