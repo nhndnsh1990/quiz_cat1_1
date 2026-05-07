@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6 ハードウェア ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;} .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:36px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);} .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);} .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);} .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;} .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;} .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;} .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);} .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;} .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media (max-width: 480px){
+    body{padding:16px 12px 60px;}
+    .start-title{font-size:24px;}
+    .start-hero{padding:24px 0 20px;}
+    .start-stats{gap:10px;}
+    .stat-card{padding:12px 16px;}
+    .stat-num{font-size:22px;}
+    .section-btns{gap:6px;}
+    .sec-btn{font-size:12px;padding:5px 10px;}
+    .mode-btn{padding:14px 12px;}
+    .mode-icon{font-size:20px;margin-bottom:6px;}
+    .mode-name{font-size:14px;}
+    .question-card{padding:20px 16px;}
+    .q-term{font-size:20px;}
+    .q-statement{font-size:15px;line-height:1.7;padding:12px 14px;}
+    .btn-circle{font-size:28px;padding:14px 10px;}
+    .result-card{padding:16px;}
+    .result-verdict{font-size:16px;}
+    .result-explanation{font-size:13px;}
+    .wrong-point{font-size:12px;}
+    .score-ring{width:110px;height:110px;}
+    .score-ring::before{inset:12px;}
+    .score-num{font-size:24px;}
+    .score-message{font-size:20px;}
+    .score-actions{flex-direction:column;align-items:center;}
+    .btn-primary,.btn-outline{width:100%;max-width:280px;text-align:center;}
+    .header-title{font-size:14px;}
+    .wi-term{font-size:15px;}
+    .weak-title{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">6 ハードウェア</div>
+  <div class="header-meta">22問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 6</div>
+    <div class="start-title">ハードウェア</div>
+    <div class="start-sub">論理回路・電子部品・制御 ／ 22問収録</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">22</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">22問すべてに挑戦</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 22</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag">6-1 ハードウェア</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header"><div class="weak-title">苦手問題一覧</div><button class="btn-clear" onclick="clearWeak()">リセット</button></div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:"6-01",term:"AND回路",
+   statement:"AND回路はすべての入力が「1」のときのみ出力が「1」になる論理回路で、複数の条件が同時に満たされた場合のみ動作するシステムの実装に使われる。",
+   answer:true,
+   explanation:"その通りです。AND回路（論理積）はすべての入力が「1」のときだけ出力が「1」になります。真理値表では「0,0→0」「0,1→0」「1,0→0」「1,1→1」です。セキュリティシステムで複数のセンサーがすべて検知した場合のみ警報を出す、という実装に使われます。"},
+  {id:"6-02",term:"OR回路",
+   statement:"OR回路は入力のどれか一つでも「1」であれば出力が「1」になる論理回路で、すべての入力が「0」のときだけ出力が「0」になる。",
+   answer:true,
+   explanation:"その通りです。OR回路（論理和）は少なくとも1つの入力が「1」であれば出力が「1」になります。真理値表では「0,0→0」「0,1→1」「1,0→1」「1,1→1」です。"},
+  {id:"6-03",term:"NOT回路",
+   statement:"NOT回路は入力が「1」なら出力は「0」、入力が「0」なら出力は「1」となる論理回路（インバータ）で、入力を反転させる。",
+   answer:true,
+   explanation:"その通りです。NOT回路は論理否定（反転）を行う最も基本的な論理ゲートです。1つの入力に対して1つの出力を返し、その値は入力と逆になります。NAND・NOR・XNOR等の複合ゲートの構成要素でもあります。"},
+  {id:"6-04",term:"NAND回路",
+   statement:"NAND回路はAND回路の出力を反転したもので、すべての入力が「1」のときのみ出力が「0」になる。NAND回路だけですべての論理演算を表現できる汎用論理素子である。",
+   answer:true,
+   explanation:"その通りです。NAND（NOT AND）回路はすべての入力が「1」のときだけ「0」を出力し、それ以外は「1」を出力します。NAND回路は機能完全（汎用論理素子）であり、NAND回路のみでAND・OR・NOT・XORなどあらゆる論理回路を構成できます。"},
+  {id:"6-05",term:"フリップフロップ",
+   statement:"フリップフロップはビット（0または1）の状態を記憶できるデジタル回路の基本素子で、トリガ信号に応じて状態が変化する順序回路である。レジスタやカウンタに利用される。",
+   answer:true,
+   explanation:"その通りです。フリップフロップは1ビットの情報を記憶できる順序回路の基本素子です。SRフリップフロップ・Dフリップフロップ・JKフリップフロップなどがあります。CPU内部のレジスタ・カウンタ・シフトレジスタの構成要素として使われます。"},
+  {id:"6-06",term:"論理式",
+   statement:"論理式はAND・OR・NOTなどの論理演算を組み合わせて論理回路の入出力関係を数学的に表現する式で、回路の動作を解析・最適化する際に使われる。",
+   answer:true,
+   explanation:"その通りです。論理式（ブール代数式）は回路の動作を数学的に表現します。例えばAND回路の論理式はA・B（またはA AND B）、OR回路はA+B（またはA OR B）と表します。カルノー図などで論理式を簡単化して最小回路を設計できます。"},
+  {id:"6-07",sec:"正論理",term:"正論理",
+   statement:"正論理は信号の「高」状態（高電圧）を論理値「1」、「低」状態（低電圧）を論理値「0」として扱う方式で、デジタル回路の標準的な表現方法である。",
+   answer:true,
+   explanation:"その通りです。正論理（Positive Logic）は「H（High）=1、L（Low）=0」という直感的な対応で、ANDゲート・ORゲートなどの標準的なデジタル回路で使われます。"},
+  {id:"6-08",term:"負論理",
+   statement:"負論理は正論理と反対に、信号の「低」状態（低電圧）を論理値「1」、「高」状態（高電圧）を論理値「0」として扱う方式である。",
+   answer:true,
+   explanation:"その通りです。負論理（Negative Logic）は「L（Low）=1、H（High）=0」という対応です。正論理でのAND回路の接続先に負論理を使うとOR回路として動作するなど、正論理・負論理の変換によって回路の解釈が変わります。"},
+  {id:"6-09",term:"真理値表",
+   statement:"真理値表は論理回路の各入力の組み合わせに対する出力の値を整理した表で、AND・OR・NOTなどの論理回路の動作を明確に示すために使われる。",
+   answer:true,
+   explanation:"その通りです。真理値表（Truth Table）はn個の入力に対して2ⁿ行の表で全組み合わせの出力を示します。論理回路の設計・検証に必須のツールで、表から論理式を導出して回路を実装します。"},
+  {id:"6-10",term:"オープンループ制御",
+   statement:"オープンループ制御は出力をフィードバックして制御に利用しない制御方式で、シンプルでコストが低いが出力の誤差を自動補正できない。電気ストーブの温度設定などが例として挙げられる。",
+   answer:true,
+   explanation:"その通りです。オープンループ（開ループ）制御は入力→システム→出力という一方向の流れで、出力の結果を入力に戻すフィードバックがありません。精度よりもシンプルさ・低コストを優先する場合に使われます。電子レンジのタイマー加熱・自動販売機の商品排出がその例です。"},
+  {id:"6-11",term:"クローズドループ制御",
+   statement:"クローズドループ制御はセンサーで出力を測定してフィードバックし、目標値との差を元に制御入力を調整する方式で、より正確な制御を実現する。温度調節器・自動車のクルーズコントロールが代表例である。",
+   answer:true,
+   explanation:"その通りです。クローズドループ（閉ループ）制御はフィードバック制御とも呼ばれます。センサーで実際の出力を測定し目標値との偏差を計算して制御量を調整するため、外乱があっても目標値に近い状態を維持できます。"},
+  {id:"6-12",term:"シーケンス制御",
+   statement:"シーケンス制御は機械や装置の動作を決められた順序（シーケンス）で管理する制御方式で、自動車の組み立てラインや工場の生産ラインにおいてPLCなどで実装される。",
+   answer:true,
+   explanation:"その通りです。シーケンス制御は「ステップ1が完了したらステップ2を開始する」というような順序制御です。PLC（プログラマブルロジックコントローラ）がラダー図などで実装します。信号機の点灯順序制御・洗濯機の洗濯→すすぎ→脱水の順序制御も例です。"},
+  {id:"6-13",term:"フィードバック制御",
+   statement:"フィードバック制御はシステムの出力を監視してその結果を入力に戻すことで、目標値に出力を近づけるよう制御する方式で、クローズドループ制御と同義である。",
+   answer:true,
+   explanation:"その通りです。フィードバック制御とクローズドループ制御は同義です。エアコンの温度制御（センサーで室温を測定→設定温度との差で冷暖房の強さを調整）・オーブンの温度制御・産業用ロボットのアーム位置制御などで使われます。"},
+  {id:"6-14",term:"PWM制御",
+   statement:"PWM制御（パルス幅変調）はデジタル信号のON/OFFの時間比率（デューティ比）を変えることでアナログ的な出力制御を行う技術で、モーターの回転速度調整や照明の明るさ調整に使われる。",
+   answer:true,
+   explanation:"その通りです。PWM（Pulse Width Modulation）はデジタルで簡単にアナログ量を制御できます。デューティ比（ON時間/周期）を変えることで平均電力を制御します。モータードライバ・LEDの輝度制御・D/Aコンバータの代替として広く使われます。"},
+  {id:"6-15",term:"ダイオード",
+   statement:"ダイオードは電流が一方向にのみ流れるように制御する電子部品で、PN接合半導体を使い整流器（交流→直流変換）や信号保護・スイッチングに利用される。",
+   answer:true,
+   explanation:"その通りです。ダイオードはPN接合の特性により順方向（アノード→カソード）には電流が流れ、逆方向にはほぼ流れません。AC→DC変換の整流回路・逆電流保護・クランプ回路・論理回路など幅広く使われます。"},
+  {id:"6-16",term:"LED",
+   statement:"LED（発光ダイオード）は電気を流すことで光を発する半導体素子で、エネルギー効率が高く長寿命であり、照明や表示デバイスに広く使用されている。",
+   answer:true,
+   explanation:"その通りです。LED（Light Emitting Diode）は順方向電流を流すと発光します。従来の白熱電球に比べて消費電力が約1/10、寿命が約40倍です。白色LEDは青色LEDに蛍光体を組み合わせて白色光を作ります。"},
+  {id:"6-17",term:"トランジスタ",
+   statement:"トランジスタは電流や電圧の制御を行う半導体素子で、主に増幅とスイッチングの役割を果たし、集積回路（IC）として多くのトランジスタが1チップに集約されてコンピュータなどに使われる。",
+   answer:true,
+   explanation:"その通りです。トランジスタはバイポーラトランジスタ（BJT）とFET（電界効果トランジスタ）に大別されます。小電流で大電流を制御（増幅）したり、スイッチとして電流をON/OFFします。現代のCPUは数百億個のトランジスタを1チップに集積しています。"},
+  {id:"6-18",term:"IC",
+   statement:"IC（集積回路）は多数のトランジスタ・抵抗・コンデンサなどを1つの半導体チップに集積したもので、複雑な回路の小型化・低コスト化・高信頼性化を実現する。",
+   answer:true,
+   explanation:"その通りです。IC（Integrated Circuit）は1959年に発明され、電子機器の小型化・高性能化を劇的に進めました。小規模IC（SSI）・中規模IC（MSI）・大規模IC（LSI）・超大規模IC（VLSI）と集積度が上がってきました。"},
+  {id:"6-19",term:"LSI",
+   statement:"LSI（大規模集積回路）は数千から数百万のトランジスタを1つのチップに集積したもので、プロセッサやメモリなどの基幹部品として使われる。",
+   answer:true,
+   explanation:"その通りです。LSI（Large-Scale Integration）はICの集積度による分類の一つです。さらに集積度が高いものをVLSI（Very Large-Scale Integration）・ULSI（Ultra LSI）と呼びます。スマートフォンのSoC（システムオンチップ）は高度なLSI/VLSIの例です。"},
+  {id:"6-20",term:"VLSI",
+   statement:"VLSIはLSIより少ない数のトランジスタを集積する技術で、主に小型の電子機器に使われる。数百から数千個のトランジスタを含む。",
+   answer:false,
+   explanation:"VLSIはLSIより「多い」トランジスタを集積する技術です。VLSI（Very Large-Scale Integration：超大規模集積回路）は数百万〜数十億個のトランジスタを含みます。LSI（数千〜数百万個）より高い集積度を持ちます。",
+   wrongPoint:"「LSIより少ない」「数百から数千個」が誤りです。VLSIはLSIより高い集積度（数百万〜数十億個）のトランジスタを含む超大規模集積回路です。"},
+  {id:"6-21",term:"FPGA",
+   statement:"FPGAはユーザーが出荷後に論理回路の設計を変更・書き換えできる集積回路で、専用ASICより柔軟性が高く、通信・画像処理・AI推論アクセラレータなど多岐にわたる分野で利用される。",
+   answer:true,
+   explanation:"その通りです。FPGA（Field-Programmable Gate Array）はユーザーが使用現場でプログラムし直せる集積回路です。専用チップ（ASIC）ほどの性能は出ませんが設計変更が容易で、プロトタイプ開発や少量生産品・ハードウェアアクセラレータとして使われます。"},
+  {id:"6-22",term:"回路設計",
+   statement:"回路設計はAND・OR・NOTなどの論理ゲートを組み合わせて特定の機能を実現するデジタル回路を設計するプロセスで、真理値表・論理式・シミュレーションなどを経て実際の回路が実装される。",
+   answer:true,
+   explanation:"その通りです。デジタル回路設計は「仕様定義→真理値表作成→論理式導出→論理式の最小化→回路図作成→シミュレーション→実装（IC/FPGA）」という流れで行われます。加算器・デコーダ・マルチプレクサなどが基本的な論理回路の設計例です。"}
+];
+
+const CAT_ID="6",WEAK_KEY="fe_weak_v1",BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(s,t){const p=getBest();if(!p||s/t>p.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score:s,total:t,pct:s/t}));}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const b=getBest();document.getElementById('best-score-stat').textContent=b?`${b.score}/${b.total}`:'—';}
+function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');if(n==='weak')renderWeakList();if(n==='start')updateStartStats();}
+function showTab(n){showView(n);}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function startQuiz(mode){
+  lastMode=mode;let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(QUESTIONS).slice(0,10);}
+  else{pool=shuffle(QUESTIONS);}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],t=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${t}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/t*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(ua){
+  const q=currentQueue[currentIdx],ok=(ua===q.answer);
+  if(ok)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer:ua,isCorrect:ok});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(ua&&!ok)mb.className='btn-circle correct-btn flash-wrong';
+  if(!ua&&!ok)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(ok?'correct-card':'wrong-card');rc.style.display='block';
+  document.getElementById('result-verdict').textContent=ok?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!ok&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const t=currentQueue.length,pct=Math.round(sessionScore/t*100);
+  saveBest(sessionScore,t);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${t}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([v])=>pct>=v)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>

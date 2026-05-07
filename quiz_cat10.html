@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 ネットワーク ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;} .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;} .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:34px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);} .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .section-select{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+  .section-title{font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;}
+  .section-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .sec-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:.2s;}
+  .sec-btn:hover,.sec-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,156,249,.08);}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);} .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);} .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;} .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;} .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;} .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);} .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);} .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;} .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media (max-width: 480px){
+    body{padding:16px 12px 60px;}
+    .start-title{font-size:24px;}
+    .start-hero{padding:24px 0 20px;}
+    .start-stats{gap:10px;}
+    .stat-card{padding:12px 16px;}
+    .stat-num{font-size:22px;}
+    .section-btns{gap:6px;}
+    .sec-btn{font-size:12px;padding:5px 10px;}
+    .mode-btn{padding:14px 12px;}
+    .mode-icon{font-size:20px;margin-bottom:6px;}
+    .mode-name{font-size:14px;}
+    .question-card{padding:20px 16px;}
+    .q-term{font-size:20px;}
+    .q-statement{font-size:15px;line-height:1.7;padding:12px 14px;}
+    .btn-circle{font-size:28px;padding:14px 10px;}
+    .result-card{padding:16px;}
+    .result-verdict{font-size:16px;}
+    .result-explanation{font-size:13px;}
+    .wrong-point{font-size:12px;}
+    .score-ring{width:110px;height:110px;}
+    .score-ring::before{inset:12px;}
+    .score-num{font-size:24px;}
+    .score-message{font-size:20px;}
+    .score-actions{flex-direction:column;align-items:center;}
+    .btn-primary,.btn-outline{width:100%;max-width:280px;text-align:center;}
+    .header-title{font-size:14px;}
+    .wi-term{font-size:15px;}
+    .weak-title{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">10 ネットワーク</div>
+  <div class="header-meta">205問</div>
+</div>
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 10</div>
+    <div class="start-title">ネットワーク</div>
+    <div class="start-sub">205問収録 ／ セクション別出題対応</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">205</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="section-select">
+    <div class="section-title">📂 出題セクションを選択（複数可・未選択=全て）</div>
+    <div class="section-btns">
+      <button class="sec-btn" data-sec="10-1" onclick="toggleSec(this)">10-1 ネットワーク方式 (39)</button>
+      <button class="sec-btn" data-sec="10-2" onclick="toggleSec(this)">10-2 データ通信と制御 (53)</button>
+      <button class="sec-btn" data-sec="10-3" onclick="toggleSec(this)">10-3 通信プロトコル (41)</button>
+      <button class="sec-btn" data-sec="10-4" onclick="toggleSec(this)">10-4 ネットワーク管理 (25)</button>
+      <button class="sec-btn" data-sec="10-5" onclick="toggleSec(this)">10-5 ネットワーク応用 (47)</button>
+    </div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">選択セクションを全問</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 205</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag" id="q-section-tag">—</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header"><div class="weak-title">苦手問題一覧</div><button class="btn-clear" onclick="clearWeak()">リセット</button></div>
+  <div id="weak-list-body"></div>
+</div>
+<script src="quiz_cat10_data.js"></script>
+</body>
+</html>
