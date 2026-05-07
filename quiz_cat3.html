@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3 コンピュータ構成要素 ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:15px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:30px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .section-select{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+  .section-title{font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;}
+  .section-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .sec-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:.2s;}
+  .sec-btn:hover,.sec-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,156,249,.08);}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media (max-width: 480px){
+    body{padding:16px 12px 60px;}
+    .start-title{font-size:24px;}
+    .start-hero{padding:24px 0 20px;}
+    .start-stats{gap:10px;}
+    .stat-card{padding:12px 16px;}
+    .stat-num{font-size:22px;}
+    .section-btns{gap:6px;}
+    .sec-btn{font-size:12px;padding:5px 10px;}
+    .mode-btn{padding:14px 12px;}
+    .mode-icon{font-size:20px;margin-bottom:6px;}
+    .mode-name{font-size:14px;}
+    .question-card{padding:20px 16px;}
+    .q-term{font-size:20px;}
+    .q-statement{font-size:15px;line-height:1.7;padding:12px 14px;}
+    .btn-circle{font-size:28px;padding:14px 10px;}
+    .result-card{padding:16px;}
+    .result-verdict{font-size:16px;}
+    .result-explanation{font-size:13px;}
+    .wrong-point{font-size:12px;}
+    .score-ring{width:110px;height:110px;}
+    .score-ring::before{inset:12px;}
+    .score-num{font-size:24px;}
+    .score-message{font-size:20px;}
+    .score-actions{flex-direction:column;align-items:center;}
+    .btn-primary,.btn-outline{width:100%;max-width:280px;text-align:center;}
+    .header-title{font-size:14px;}
+    .wi-term{font-size:15px;}
+    .weak-title{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">3 コンピュータ構成要素</div>
+  <div class="header-meta">190問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 3</div>
+    <div class="start-title">コンピュータ構成要素</div>
+    <div class="start-sub">190問収録 ／ セクション別出題対応</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">190</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="section-select">
+    <div class="section-title">📂 出題セクションを選択（複数可・未選択=全て）</div>
+    <div class="section-btns">
+      <button class="sec-btn" data-sec="3-1" onclick="toggleSec(this)">3-1 プロセッサ (67)</button>
+      <button class="sec-btn" data-sec="3-2" onclick="toggleSec(this)">3-2 メモリ (28)</button>
+      <button class="sec-btn" data-sec="3-3" onclick="toggleSec(this)">3-3 バス (14)</button>
+      <button class="sec-btn" data-sec="3-4" onclick="toggleSec(this)">3-4 入出力デバイス (24)</button>
+      <button class="sec-btn" data-sec="3-5" onclick="toggleSec(this)">3-5 入出力装置 (57)</button>
+    </div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">選択セクションを全問</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 190</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag" id="q-section-tag">—</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ── 3-1 プロセッサ ──
+  {id:"3-001",sec:"3-1 プロセッサ",term:"パーソナルコンピュータ",
+   statement:"パーソナルコンピュータ（PC）は個人が使うために設計されたコンピュータで、デスクトップ型やノート型があり、家庭やオフィスでの多様な作業に利用される。",
+   answer:true,explanation:"その通りです。PCは個人向けに設計された汎用コンピュータです。インターネット・文書作成・ゲーム・写真編集など多様な用途があり、最近はタブレットやスマートフォンもPC的な利用がされています。"},
+  {id:"3-002",sec:"3-1 プロセッサ",term:"ワークステーション",
+   statement:"ワークステーションは家庭向けの低価格コンピュータで、主にゲームや動画視聴のために設計されており、一般的なPCと同等の性能を持つ。",
+   answer:false,explanation:"ワークステーションは科学技術計算・3Dグラフィックス・CAD・映像制作などの専門的な作業向けに設計された高性能コンピュータです。一般PCより大容量メモリと高速プロセッサを搭載します。",
+   wrongPoint:"「家庭向けの低価格コンピュータ」「一般PCと同等の性能」が誤りです。ワークステーションは専門作業向けの高性能機で、一般PCより高性能・高価格です。"},
+  {id:"3-003",sec:"3-1 プロセッサ",term:"スーパーコンピュータ",
+   statement:"スーパーコンピュータは多数のプロセッサを並列に動作させて膨大なデータを短時間で処理できる最高性能のコンピュータで、気象予測・宇宙シミュレーション・医療研究などに活用される。",
+   answer:true,explanation:"その通りです。スーパーコンピュータはPFLOPS（ペタフロップス：毎秒1000兆回の浮動小数点演算）単位の性能を持ち、日本では富岳（Fugaku）が有名です。気候変動シミュレーション・新薬開発・材料科学などに使われます。"},
+  {id:"3-004",sec:"3-1 プロセッサ",term:"サーバ",
+   statement:"サーバはネットワーク上で他のコンピュータ（クライアント）にサービスやデータを提供するコンピュータで、Webサーバ・ファイルサーバ・データベースサーバなど多くの種類がある。",
+   answer:true,explanation:"その通りです。サーバはクライアントからのリクエストに応えてサービスを提供します。Webサーバ（HTTPリクエスト処理）・メールサーバ・ファイルサーバ・DBサーバなど役割別に多くの種類があります。"},
+  {id:"3-005",sec:"3-1 プロセッサ",term:"シングルボードコンピュータ",
+   statement:"シングルボードコンピュータはプロセッサ・メモリ・ストレージ・入出力ポートなどコンピュータの主要コンポーネントが1枚の基板に集約されたコンピュータで、Raspberry Piが有名な例である。",
+   answer:true,explanation:"その通りです。シングルボードコンピュータ（SBC）はRaspberry PiやArduinoなどが代表例です。低コスト・省スペース・低消費電力が特徴で、教育・IoT・プロトタイプ開発などに広く使われます。"},
+  {id:"3-006",sec:"3-1 プロセッサ",term:"コンピュータの五大装置",
+   statement:"コンピュータの五大装置とは演算装置・制御装置・記憶装置・入力装置・出力装置のことであり、CPUは演算装置と制御装置を担う。",
+   answer:true,explanation:"その通りです。フォン・ノイマン型コンピュータの基本構成要素です。CPUは演算装置（ALU）と制御装置（CU）を含み、メモリが記憶装置、キーボードが入力装置、ディスプレイが出力装置に相当します。"},
+  {id:"3-007",sec:"3-1 プロセッサ",term:"CPU",
+   statement:"CPU（中央処理装置）はコンピュータの主要な演算処理を行う部品で、プログラムの命令を解釈・実行する。処理能力はコア数・クロック周波数・キャッシュメモリ等に依存する。",
+   answer:true,explanation:"その通りです。CPUはコンピュータの「頭脳」で命令のフェッチ・デコード・実行のサイクルを繰り返します。コア数（並列処理能力）・クロック周波数・キャッシュ容量などが性能指標です。"},
+  {id:"3-008",sec:"3-1 プロセッサ",term:"GPU",
+   statement:"GPUはCPUと同様に汎用的な演算処理を行うプロセッサで、単一の高性能コアで複雑な逐次処理を高速に実行することが得意である。",
+   answer:false,explanation:"GPUは多数の小規模コア（数千〜数万）を持ち、単純な演算を大量のデータに対して並列に実行することが得意です。CPUは少数の高性能コアで複雑な逐次処理を得意とします。",
+   wrongPoint:"「単一の高性能コアで複雑な逐次処理を高速に実行することが得意」が誤りです。これはCPUの特徴です。GPUは多数の小規模コアで並列処理を得意とします。"},
+  {id:"3-009",sec:"3-1 プロセッサ",term:"RISC",
+   statement:"RISCはプロセッサの命令セットを単純・少数に絞り込むアーキテクチャで、各命令をほぼ1クロックで実行できパイプライン処理に適しており、ARMプロセッサがその代表例である。",
+   answer:true,explanation:"その通りです。RISC（縮小命令セットコンピュータ）は命令数を少なく・単純に保つことで高速実行を実現します。スマートフォンやタブレットに使われるARMはRISCアーキテクチャです。"},
+  {id:"3-010",sec:"3-1 プロセッサ",term:"CISC",
+   statement:"CISCは複雑で多様な命令セットを持つアーキテクチャで、一つの命令で複数の操作を行えるためプログラムのコードが短くなる傾向がある。x86プロセッサが代表例である。",
+   answer:true,explanation:"その通りです。CISC（複合命令セットコンピュータ）は1命令で複雑な処理を実行できます。IntelのPC向けx86/x64プロセッサが代表例で、豊富な命令セットを持つためハードウェア設計が複雑になります。"},
+  {id:"3-011",sec:"3-1 プロセッサ",term:"レジスタ",
+   statement:"レジスタはCPU内部にある最も高速な記憶装置で、演算対象のデータや命令を一時的に保持する。キャッシュメモリやRAMよりも高速だがサイズは非常に小さい。",
+   answer:true,explanation:"その通りです。レジスタはメモリ階層の最上位（最高速・最小容量）に位置します。CPUが直接処理できる記憶領域で、汎用レジスタ・命令レジスタ・プログラムカウンタなど用途別の種類があります。"},
+  {id:"3-012",sec:"3-1 プロセッサ",term:"アキュムレーター",
+   statement:"アキュムレーターは演算の中間結果を一時保存するための専用レジスタで、算術演算や論理演算の結果が格納される。",
+   answer:true,explanation:"その通りです。アキュムレーター（累算器）はALU（算術論理演算ユニット）の演算結果を蓄積する専用レジスタです。加算器の結果を蓄積することから「累算器」とも呼ばれます。"},
+  {id:"3-013",sec:"3-1 プロセッサ",term:"命令アドレスレジスタ",
+   statement:"命令アドレスレジスタ（プログラムカウンタ）はCPUが次に実行すべき命令のメモリアドレスを保持するレジスタで、命令実行後に自動的に次の命令アドレスに更新される。",
+   answer:true,explanation:"その通りです。命令アドレスレジスタ（IAR）はプログラムカウンタ（PC）とも呼ばれます。命令フェッチ後に自動インクリメントされ、分岐命令実行時には分岐先アドレスに書き換えられます。"},
+  {id:"3-014",sec:"3-1 プロセッサ",term:"命令レジスタ",
+   statement:"命令レジスタは現在実行中の命令を保持するレジスタで、メモリからフェッチした命令がここに格納され、デコーダによって解読される。",
+   answer:true,explanation:"その通りです。命令レジスタ（IR）はフェッチした命令を一時保持します。その後デコーダが命令を解読して制御信号を生成し、適切な演算ユニットに処理を指示します。"},
+  {id:"3-015",sec:"3-1 プロセッサ",term:"デコーダ",
+   statement:"デコーダ（命令解読器）はフェッチした命令を解析し、実行に必要な制御信号を生成してCPU各部に指示を出す回路で、「命令サイクル」のデコードステージを担う。",
+   answer:true,explanation:"その通りです。デコーダは命令レジスタに格納された命令コードを解釈し、どの演算を行うか・どのレジスタを使うか・どのメモリアドレスにアクセスするかを判断して制御信号を生成します。"},
+  {id:"3-016",sec:"3-1 プロセッサ",term:"汎用レジスタ",
+   statement:"汎用レジスタはCPU内で算術演算・論理演算・メモリアクセスなど様々な目的に使えるレジスタで、プログラマが自由に使用できる一時記憶領域として機能する。",
+   answer:true,explanation:"その通りです。汎用レジスタは特定の用途に縛られない多目的なレジスタです。x86-64ではRAX・RBX・RCX・RDXなど16本の64ビット汎用レジスタがあります。"},
+  {id:"3-017",sec:"3-1 プロセッサ",term:"インデックスレジスタ",
+   statement:"インデックスレジスタは配列やテーブルへのアクセスに使われるレジスタで、ベースアドレスにインデックス値を加算して実効アドレスを計算するインデックスアドレス指定に使用される。",
+   answer:true,explanation:"その通りです。インデックスレジスタはアドレス修飾の一種であるインデックスアドレッシングに使います。配列の先頭アドレス（ベース）にインデックス（要素番号）を加算して目的の要素アドレスを求めます。"},
+  {id:"3-018",sec:"3-1 プロセッサ",term:"ベースレジスタ",
+   statement:"ベースレジスタはプログラムの基準アドレスを保持するレジスタで、ベースアドレスにオフセットを加算して実効アドレスを求めるベースアドレス指定に使用され、メモリの再配置や保護に役立つ。",
+   answer:true,explanation:"その通りです。ベースレジスタはメモリの基準点を保持します。オペレーティングシステムがプログラムを任意のメモリ領域に配置（再配置）する際に使われ、プロセス間のメモリ保護にも貢献します。"},
+  {id:"3-019",sec:"3-1 プロセッサ",term:"スタックポインタ",
+   statement:"スタックポインタはスタックの最上部アドレスを指すレジスタで、プッシュ操作でデータを積むと値が変化し、ポップ操作で取り出すと逆方向に変化する。サブルーチン呼び出し時の戻りアドレス保存に使われる。",
+   answer:true,explanation:"その通りです。スタックポインタ（SP）はスタックのトップを指します。関数呼び出し時に戻りアドレス・引数・ローカル変数をスタックに積み（プッシュ）、関数終了時に取り出す（ポップ）仕組みを支えます。"},
+  {id:"3-020",sec:"3-1 プロセッサ",term:"順序回路",
+   statement:"順序回路は現在の入力だけでなく内部状態（過去の入力履歴）によっても出力が変わるデジタル回路で、フリップフロップなどの記憶素子を持ち、CPUのレジスタやカウンタがその例である。",
+   answer:true,explanation:"その通りです。順序回路は記憶素子を持ち「現在の入力＋現在の状態」で次の状態と出力が決まります。組合せ回路との違いは内部状態（メモリ）の有無です。"},
+  {id:"3-021",sec:"3-1 プロセッサ",term:"組合せ回路",
+   statement:"組合せ回路は現在の入力だけで出力が決まるデジタル回路で内部に記憶素子を持たず、同じ入力に対して常に同じ出力を返す。加算器・デコーダ・マルチプレクサが代表例である。",
+   answer:true,explanation:"その通りです。組合せ回路は状態を持たず、入力が確定すれば即座に出力が確定します。ANDゲート・ORゲートを組み合わせて加算器・エンコーダ・マルチプレクサなどの機能を実現します。"},
+  {id:"3-022",sec:"3-1 プロセッサ",term:"OR回路",
+   statement:"OR回路は複数の入力のうち少なくとも一つが「1」であれば出力が「1」になる論理回路で、すべての入力が「0」のときのみ出力が「0」になる。",
+   answer:true,explanation:"その通りです。OR回路（論理和）の真理値表は「0,0→0」「0,1→1」「1,0→1」「1,1→1」です。"},
+  {id:"3-023",sec:"3-1 プロセッサ",term:"AND回路",
+   statement:"AND回路はすべての入力が「1」のときだけ出力が「1」になる論理回路で、一つでも「0」の入力があれば出力は「0」になる。",
+   answer:true,explanation:"その通りです。AND回路（論理積）の真理値表は「0,0→0」「0,1→0」「1,0→0」「1,1→1」です。"},
+  {id:"3-024",sec:"3-1 プロセッサ",term:"NOT回路",
+   statement:"NOT回路は入力を反転させる論理回路（インバータ）で、入力が「1」なら出力は「0」、入力が「0」なら出力は「1」になる。",
+   answer:true,explanation:"その通りです。NOT回路（否定）は唯一の1入力論理ゲートです。信号の反転に使われ、NAND・NORなどの複合ゲートの基本要素でもあります。"},
+  {id:"3-025",sec:"3-1 プロセッサ",term:"NAND回路",
+   statement:"NAND回路はAND回路の出力を反転した論理回路で、すべての入力が「1」のときのみ出力が「0」になる。NAND回路だけですべての論理演算を表現できるため「汎用論理素子」と呼ばれる。",
+   answer:true,explanation:"その通りです。NANDは機能完全（汎用論理素子）であり、NAND回路のみでAND・OR・NOT・XORなどすべての論理演算を実現できます。集積回路の設計で広く使われます。"},
+  {id:"3-026",sec:"3-1 プロセッサ",term:"命令の実行手順",
+   statement:"CPUの命令実行サイクルは「フェッチ（命令取り出し）→デコード（命令解読）→実行（演算）→ライトバック（結果保存）」の順で行われる。",
+   answer:true,explanation:"その通りです。これを「命令サイクル（インストラクションサイクル）」と呼びます。フェッチでメモリから命令を取得し、デコードで解読し、実行で演算を行い、ライトバックでレジスタやメモリに結果を書き戻します。"},
+  {id:"3-027",sec:"3-1 プロセッサ",term:"アドレス修飾",
+   statement:"アドレス修飾とは命令のアドレス部を加工して実効アドレスを求める手法で、即値・直接・インデックス・ベースなどの方式がある。",
+   answer:true,explanation:"その通りです。アドレス修飾（アドレッシングモード）は命令中のアドレス情報から実際にアクセスするアドレスを決める方式です。インデックスアドレス指定（配列アクセス）・ベースアドレス指定（メモリ再配置）などがあります。"},
+  {id:"3-028",sec:"3-1 プロセッサ",term:"算術演算命令",
+   statement:"算術演算命令は加算・減算・乗算・除算などの数値計算を行うCPU命令で、整数演算命令と浮動小数点演算命令がある。",
+   answer:true,explanation:"その通りです。算術演算命令はプログラムの数値処理の中心です。整数演算（ADD・SUB・MUL・DIVなど）と浮動小数点演算（FADD・FSUBなど）が区別されます。"},
+  {id:"3-029",sec:"3-1 プロセッサ",term:"論理演算命令",
+   statement:"論理演算命令はAND・OR・NOT・XORなどのビット単位の論理演算を行うCPU命令で、フラグ操作やビットマスク処理に使用される。",
+   answer:true,explanation:"その通りです。論理演算命令はビットレベルの操作に使われます。特定ビットの設定（OR）・クリア（AND）・反転（XOR）・検査（AND）などに活用されます。"},
+  {id:"3-030",sec:"3-1 プロセッサ",term:"転送命令",
+   statement:"転送命令はレジスタ間・レジスタとメモリ間でデータを移動するCPU命令で、ロード命令（メモリ→レジスタ）やストア命令（レジスタ→メモリ）が代表例である。",
+   answer:true,explanation:"その通りです。転送命令はCPUが最も頻繁に実行する命令の一つです。メモリからレジスタへのロード（LOAD）・レジスタからメモリへのストア（STORE）・レジスタ間のムーブ（MOV）などがあります。"},
+  {id:"3-031",sec:"3-1 プロセッサ",term:"比較命令",
+   statement:"比較命令は2つの値を比較してその結果（等しい・大きい・小さいなど）をフラグレジスタに設定するCPU命令で、その後の分岐命令と組み合わせて条件分岐を実現する。",
+   answer:true,explanation:"その通りです。比較命令（CMP）は実際には減算を行いますが結果はレジスタに保存せず、ゼロフラグ・符号フラグ・オーバーフローフラグなどのフラグのみを更新します。続くJE（等しければジャンプ）などの分岐命令でフラグを参照します。"},
+  {id:"3-032",sec:"3-1 プロセッサ",term:"分岐命令",
+   statement:"分岐命令はプログラムの実行順序を変更するCPU命令で、条件に関係なく分岐する無条件分岐（ジャンプ）と、フラグの状態に応じて分岐する条件分岐がある。",
+   answer:true,explanation:"その通りです。分岐命令はif文やループの実現に不可欠です。無条件ジャンプ（JMP）はどんな状況でもジャンプし、条件分岐（JE・JNE・JGなど）はフラグの状態でジャンプするかどうかを決定します。"},
+  {id:"3-033",sec:"3-1 プロセッサ",term:"シフト命令",
+   statement:"シフト命令はビット列を左右に移動するCPU命令で、左に1ビットシフトすると値は2倍、右に1ビットシフトすると値は2で割られる効果があるため、高速な乗除算に利用できる。",
+   answer:true,explanation:"その通りです。シフト命令は2の累乗の乗除算を高速に行えます。左シフトで×2・右シフトで÷2です。論理シフト（空きビットを0で埋める）・算術シフト（符号ビットを保持）・ローテート（あふれたビットを反対側へ）の種類があります。"},
+  {id:"3-034",sec:"3-1 プロセッサ",term:"内部割込み",
+   statement:"内部割込みはCPUが命令実行中に検出したエラー（ゼロ除算・オーバーフロー・未定義命令など）によって発生する割込みで、ソフトウェア例外（例外処理）として扱われる。",
+   answer:true,explanation:"その通りです。内部割込み（トラップ・例外）はCPU内部の異常状態で発生します。プログラムのゼロ除算・ページフォルト・保護違反などが例外を引き起こし、例外ハンドラ（OSの処理）が実行されます。"},
+  {id:"3-035",sec:"3-1 プロセッサ",term:"外部割込み",
+   statement:"外部割込みはCPU外部の要因（キーボード入力・タイマー満了・データ受信完了など）によって発生する割込みで、CPUは現在の処理を中断して割込みハンドラを実行した後、元の処理に戻る。",
+   answer:true,explanation:"その通りです。外部割込みはI/O完了通知やタイマーなどCPU外部のイベントで発生します。CPUはレジスタの状態を保存して割込みハンドラを実行し、処理後に元の処理を再開します。"},
+  {id:"3-036",sec:"3-1 プロセッサ",term:"SVC割込み",
+   statement:"SVC割込みはユーザープログラムがOSの特権機能（ファイル操作・メモリ割り当てなど）を呼び出すためのソフトウェア割込みで、システムコールの仕組みを実現する。",
+   answer:true,explanation:"その通りです。SVC（スーパーバイザーコール）割込みはユーザー空間からカーネル空間へ移行するための仕組みです。LinuxではINT 0x80やSYSCALL命令がこれに相当し、ファイル読み書き・プロセス生成などのOS機能を呼び出します。"},
+  {id:"3-037",sec:"3-1 プロセッサ",term:"入出力割込み",
+   statement:"入出力割込みは入出力デバイスの処理（ディスクへの書き込みやプリンタの印刷など）が完了したことをCPUに通知するための割込みで、CPUはI/O完了を待たずに他の処理を続行できる。",
+   answer:true,explanation:"その通りです。I/O割込みはCPUとI/Oデバイスの速度差を埋めます。CPUはI/O処理完了を待つ（ポーリング）のではなく他の処理を続け、I/O完了時の割込みで通知を受け取ることでシステム効率が向上します。"},
+  {id:"3-038",sec:"3-1 プロセッサ",term:"クロック周波数",
+   statement:"クロック周波数はCPUが1秒間に動作する回数を示す指標でHzで表され、現代のCPUはGHz単位で動作する。クロック周波数が高いほど性能が高いとは限らない。",
+   answer:true,explanation:"その通りです。クロック周波数が高いほど1秒間の動作回数は増えますが、1命令に何クロック必要か（CPI）はアーキテクチャで異なります。実行時間=命令数×CPI÷クロック周波数で評価します。"},
+  {id:"3-039",sec:"3-1 プロセッサ",term:"CPI",
+   statement:"CPIは1命令の実行に必要な平均クロック数で、値が小さいほど効率よくプログラムを実行できることを意味する。実行時間はCPIとクロック周波数の両方に依存する。",
+   answer:true,explanation:"その通りです。CPI（Cycles Per Instruction）は小さいほど高効率です。実行時間＝命令数×CPI÷クロック周波数で計算します。RISCは一般的にCISCよりCPIが小さい傾向があります。"},
+  {id:"3-040",sec:"3-1 プロセッサ",term:"MIPS",
+   statement:"MIPSはコンピュータが1秒間に実行できる命令数を100万単位で表した性能指標で、異なるアーキテクチャのコンピュータ間でMIPSを直接比較することは意味がない。",
+   answer:true,explanation:"その通りです。MIPS（Millions of Instructions Per Second）は同じアーキテクチャ内での比較には有効ですが、命令の「重さ」がアーキテクチャ間で異なるため、異なるアーキテクチャ間の比較には適しません。"},
+  {id:"3-041",sec:"3-1 プロセッサ",term:"FLOPS",
+   statement:"FLOPSは1秒間に実行できる浮動小数点演算数を表す指標で、スーパーコンピュータの性能評価に使われ、現代のスーパーコンピュータはPFLOPS（毎秒1000兆回）単位の性能を持つ。",
+   answer:true,explanation:"その通りです。FLOPS（Floating-point Operations Per Second）はHPC（高性能計算）の標準的な性能指標です。1PFLOPS=10¹⁵FLOPS。科学計算・AI学習には浮動小数点演算が多いためFLOPSが重要な指標です。"},
+  {id:"3-042",sec:"3-1 プロセッサ",term:"パイプライン",
+   statement:"パイプラインは命令実行を複数のステージに分け、異なる命令を各ステージで並行処理することでスループットを向上させる技術で、分岐命令が発生するとパイプラインのハザードが生じる場合がある。",
+   answer:true,explanation:"その通りです。パイプラインは工場の流れ作業のように複数の命令を並行処理します。ただし条件分岐で「予測した分岐先が外れる」と、先行して実行中の命令を破棄するペナルティ（ハザード）が発生します。"},
+  {id:"3-043",sec:"3-1 プロセッサ",term:"スーパースカラ",
+   statement:"スーパースカラは1つのCPU内に複数の実行ユニットを持ち、1クロックサイクルで複数の命令を同時実行できるアーキテクチャで、現代の高性能CPUの多くが採用している。",
+   answer:true,explanation:"その通りです。スーパースカラはILP（命令レベル並列性）を活用してスループットを向上させます。命令の依存関係がない複数の命令をILP検出して並列実行します。IntelのCore iシリーズなど現代CPUに広く採用されています。"},
+  {id:"3-044",sec:"3-1 プロセッサ",term:"VLIW",
+   statement:"VLIWはコンパイラが複数の独立命令を一つの超長命令語にまとめてCPUの複数実行ユニットに同時発行するアーキテクチャで、スーパースカラと異なり並列性をコンパイル時（静的）に決定する。",
+   answer:true,explanation:"その通りです。VLIW（超長命令語）はコンパイラに並列性の決定を任せるアーキテクチャです。スーパースカラが実行時に動的に並列性を検出するのに対し、VLIWはコンパイル時に静的に決定します。"},
+  {id:"3-045",sec:"3-1 プロセッサ",term:"マルチコアプロセッサ",
+   statement:"マルチコアプロセッサは1つのプロセッサチップに複数の演算コアを集積したCPUで、デュアルコア・クアッドコアなどがあり、並列処理性能が向上する。",
+   answer:true,explanation:"その通りです。マルチコアプロセッサは複数のコアが独立して並列動作できます。シングルコアのクロック周波数向上が熱・電力の壁に直面したため、2000年代以降マルチコア化が進みました。"},
+  {id:"3-046",sec:"3-1 プロセッサ",term:"SIMD",
+   statement:"SIMDはフリンの分類の一つで、1つの命令を複数のデータに対して同時実行するアーキテクチャで、画像処理や機械学習など大量の同一演算が必要な処理に有効である。",
+   answer:true,explanation:"その通りです。SIMD（Single Instruction Multiple Data）は同じ演算を多数のデータに一括適用します。CPUのSIMD拡張命令（SSE・AVX）やGPUが代表例で、ベクトル演算・行列演算・メディア処理に効果的です。"},
+  {id:"3-047",sec:"3-1 プロセッサ",term:"MIMD",
+   statement:"MIMDはフリンの分類の一つで、複数の命令ストリームが複数のデータストリームを独立に処理するアーキテクチャで、マルチコアプロセッサや分散コンピューティングシステムがこれに該当する。",
+   answer:true,explanation:"その通りです。MIMD（Multiple Instruction Multiple Data）は最も一般的な並列処理形態です。各プロセッサが独立した命令とデータを処理できるため、汎用的な並列処理が可能です。"},
+  {id:"3-048",sec:"3-1 プロセッサ",term:"SISD",
+   statement:"SISDはフリンの分類の一つで、1つの命令ストリームと1つのデータストリームを持つ最も基本的なアーキテクチャで、並列処理は行わない従来の逐次処理コンピュータに相当する。",
+   answer:true,explanation:"その通りです。SISD（Single Instruction Single Data）は従来のフォン・ノイマン型の逐次処理コンピュータです。命令を1つずつ順番に実行する方式で、単一コアCPUの基本動作がこれに相当します。"},
+  {id:"3-049",sec:"3-1 プロセッサ",term:"MISD",
+   statement:"MISDは複数の命令ストリームが1つのデータストリームを処理するアーキテクチャで、フリンの分類で最も実用的な実装例が多く、科学技術計算で広く使われている。",
+   answer:false,explanation:"MISDは理論上の分類であり、実用的な実装例はほとんど存在しません。フォールトトレラントシステムの一部が近い構成を持つとされますが、商業的な普及はしていません。科学技術計算で広く使われるのはMIMDやSIMDです。",
+   wrongPoint:"「最も実用的な実装例が多く、科学技術計算で広く使われている」が誤りです。MISDは実用的な実装がほとんど存在しない理論的な分類です。"},
+  {id:"3-050",sec:"3-1 プロセッサ",term:"アムダールの法則",
+   statement:"アムダールの法則は並列化による高速化の上限を示す法則で、並列化できない部分（直列部分）が存在する限りプロセッサをいくら増やしても全体の性能向上には限界があることを示す。",
+   answer:true,explanation:"その通りです。アムダールの法則によると、直列部分の割合をpとすると最大高速化率は1/pです。例えば全体の20%が直列処理なら、無限にプロセッサを増やしても最大5倍の高速化しか得られません。"},
+  {id:"3-051",sec:"3-1 プロセッサ",term:"疎結合マルチプロセッサシステム",
+   statement:"疎結合マルチプロセッサシステムは各プロセッサが独立したメモリを持ちネットワーク経由でメッセージを交換して連携するシステムで、クラスタシステムや分散コンピューティングがこれに該当する。",
+   answer:true,explanation:"その通りです。疎結合システムは各ノードが独立したメモリを持ちメッセージパッシングで通信します。スケールアウトが容易でコスト効率が良い反面、通信オーバーヘッドがあります。"},
+  {id:"3-052",sec:"3-1 プロセッサ",term:"密結合マルチプロセッサシステム",
+   statement:"密結合マルチプロセッサシステムは複数のプロセッサが共有メモリを介して連携するシステムで、プロセッサ間でのデータ共有が容易な反面、メモリアクセス競合がボトルネックになりやすい。",
+   answer:true,explanation:"その通りです。密結合システムは共有メモリを使うため通信コストが低くデータ共有が容易ですが、多くのプロセッサが同時にメモリにアクセスすると競合が生じます。SMP（対称型マルチプロセッシング）が代表例です。"},
+  {id:"3-053",sec:"3-1 プロセッサ",term:"同期",
+   statement:"並列処理における同期は複数のプロセスやスレッドの実行順序や共有リソースへのアクセスを調整する仕組みで、ミューテックスやセマフォが排他制御の代表的な実装手段である。",
+   answer:true,explanation:"その通りです。同期機構がないと複数スレッドが同時にデータを更新するレースコンディションが発生します。ミューテックス（相互排他）・セマフォ・モニターなどで共有資源への排他制御を行います。"},
+  {id:"3-054",sec:"3-1 プロセッサ",term:"クラスタ",
+   statement:"クラスタは複数のコンピュータを高速ネットワークで接続して単一システムのように機能させる構成で、大規模な分散処理や高可用性（障害時のフェイルオーバー）の実現に使われる。",
+   answer:true,explanation:"その通りです。クラスタは計算クラスタ（HPC）と高可用性クラスタ（HA）の2種類があります。計算クラスタは処理を分散して高速化し、HAクラスタは1台が故障しても他が引き継ぐことでサービスを継続します。"},
+  {id:"3-055",sec:"3-1 プロセッサ",term:"マイクロプログラム制御方式",
+   statement:"マイクロプログラム制御方式はCPUが受け取った命令をマイクロ命令の列に変換して実行する制御方式で、命令セットの変更や新機能の追加が容易になる柔軟性が特徴である。",
+   answer:true,explanation:"その通りです。マイクロプログラム制御方式では複雑な機械語命令をマイクロROM上のマイクロプログラムで実現します。ワイヤドロジック制御より設計変更が容易ですが、マイクロROMの参照時間分だけ処理が遅くなります。"},
+  {id:"3-056",sec:"3-1 プロセッサ",term:"ワイヤドロジック制御方式",
+   statement:"ワイヤドロジック制御方式は物理的な配線（論理回路）で制御を実現する方式で、マイクロプログラム制御方式より高速だが設計変更が困難という特徴がある。",
+   answer:true,explanation:"その通りです。ワイヤドロジック（ハードワイヤード）制御はハードウェア回路で直接制御信号を生成するため高速です。RISC系プロセッサに多く採用されていますが、回路設計が複雑で変更が難しいです。"},
+  {id:"3-057",sec:"3-1 プロセッサ",term:"命令ミックス",
+   statement:"命令ミックスは実際のプログラムで使用される各命令の出現頻度を表したもので、コンピュータの実際の性能評価に使われ、よく実行される命令の比率から平均的な実行時間を算出できる。",
+   answer:true,explanation:"その通りです。命令ミックスは実際のプログラム実行パターンを反映した性能評価指標です。加算・分岐・ロードなど命令種別の出現率をもとに実際のプログラム実行性能を推定します。"},
+  {id:"3-058",sec:"3-1 プロセッサ",term:"スーパーパイプライン",
+   statement:"スーパーパイプラインはパイプラインのステージ数を増やしてクロック周波数を高める技術で、ステージを細かく分割するほど分岐ミス時のペナルティが大きくなるという欠点がある。",
+   answer:true,explanation:"その通りです。スーパーパイプラインはステージを細分化することで1ステージあたりの処理が軽くなりクロック周波数を上げられます。ただし段数が増えるほど分岐予測失敗時に破棄すべき命令が増えペナルティが大きくなります。"},
+  {id:"3-059",sec:"3-1 プロセッサ",term:"シングルコアプロセッサ",
+   statement:"シングルコアプロセッサは1チップに1つのコアを搭載するCPUで、マルチコアに比べ並列処理能力は低いが、シングルスレッドの処理では高クロックのシングルコアが有利な場合もある。",
+   answer:true,explanation:"その通りです。シングルコアは構造がシンプルで製造コストが低いですが、並列処理には限界があります。シングルスレッドのみのプログラムではマルチコアの優位性が出ない場合があります。"},
+  {id:"3-060",sec:"3-1 プロセッサ",term:"入出力命令",
+   statement:"入出力命令はCPUと入出力デバイス間でデータをやり取りするための命令で、メモリマップドI/O方式とI/Oマップド方式がある。",
+   answer:true,explanation:"その通りです。メモリマップドI/Oはメモリと同じアドレス空間でI/Oデバイスを扱い通常のメモリアクセス命令でI/Oも操作できます。I/Oマップド方式は専用のアドレス空間とIN/OUT命令を使います。"},
+  {id:"3-061",sec:"3-1 プロセッサ",term:"汎用コンピュータ",
+   statement:"汎用コンピュータは多様な処理を行えるコンピュータで、ソフトウェアを変更することで異なる用途に対応できる。デスクトップPCやノートPCが典型的な例である。",
+   answer:true,explanation:"その通りです。汎用コンピュータは特定の処理に特化した専用コンピュータと対比される概念です。同じハードウェアでもソフトウェアを変えることで文書作成・計算・通信など多様な用途に使えます。"},
+  {id:"3-062",sec:"3-1 プロセッサ",term:"マイクロコンピュータ",
+   statement:"マイクロコンピュータはCPU・メモリ・入出力装置などを1枚の基板に集積した小型コンピュータで、IoTデバイスや組み込みシステムに広く使われる。",
+   answer:true,explanation:"その通りです。マイクロコンピュータはマイコンとも略され、産業機器・家電・自動車など組み込み用途に使われます。Arduinoなどのマイコンボードもマイクロコンピュータの一種です。"},
+  {id:"3-063",sec:"3-1 プロセッサ",term:"制御用コンピュータ",
+   statement:"制御用コンピュータはセンサーからのデータを受け取り機械の動作を制御するための専用コンピュータで、自動車のエンジン管理システムや産業用ロボットの制御に使われる。",
+   answer:true,explanation:"その通りです。制御用コンピュータはリアルタイム応答性が求められる制御システムに特化しています。PLC（プログラマブルロジックコントローラ）や車載ECUが代表例です。"},
+  {id:"3-064",sec:"3-1 プロセッサ",term:"デスクトップPC",
+   statement:"デスクトップPCは机上に設置して使用するPCで、ノートPCと比べてカスタマイズ性が高く、ハードウェアのアップグレードや交換が容易という特徴がある。",
+   answer:true,explanation:"その通りです。デスクトップPCはケース内部にアクセスしやすく、メモリ増設・GPU交換・ストレージ追加などのカスタマイズが容易です。一般的にノートPCより同価格帯で高い性能を得られます。"},
+  {id:"3-065",sec:"3-1 プロセッサ",term:"ノートPC",
+   statement:"ノートPCはバッテリー内蔵で携帯可能なPCで、ディスプレイ・キーボード・タッチパッドが一体化されており、デスクトップPCと比べて省スペースで持ち運びに優れる。",
+   answer:true,explanation:"その通りです。ノートPC（ラップトップPC）は省スペース・携帯性・バッテリー駆動が特徴です。薄型軽量化が進み、現代ではゲーミングノートや高性能クリエイター向けノートも登場しています。"},
+  {id:"3-066",sec:"3-1 プロセッサ",term:"携帯端末",
+   statement:"携帯端末（モバイルデバイス）はスマートフォンやタブレットなど通信機能を持ち持ち運び可能なデジタルデバイスで、インターネット接続・アプリ利用・通話など多様な用途に使われる。",
+   answer:true,explanation:"その通りです。スマートフォン・タブレット・スマートウォッチなどが携帯端末に含まれます。現代のスマートフォンはPC並みの演算性能を持ち、モバイルコンピューティングの中心的存在です。"},
+  {id:"3-067",sec:"3-1 プロセッサ",term:"クロック周波数",
+   statement:"クロック周波数が同じであれば、命令セットアーキテクチャが異なっても、CPUの処理性能は等しくなる。",
+   answer:false,explanation:"クロック周波数が同じでも、CPIやアーキテクチャ効率が異なれば性能は異なります。実行時間＝命令数×CPI÷クロック周波数のため、クロック周波数だけで性能を決められません。",
+   wrongPoint:"「クロック周波数が同じなら性能は等しい」が誤りです。CPI・命令セット効率・パイプライン構成など多くの要因が性能に影響します。"},
+
+  // ── 3-2 メモリ ──
+  {id:"3-068",sec:"3-2 メモリ",term:"RAM",
+   statement:"RAMは電源が切れるとデータが消えてしまう揮発性メモリで、プログラムの実行やデータ処理中に使う一時的な作業領域として機能する。",
+   answer:true,explanation:"その通りです。RAM（ランダムアクセスメモリ）は揮発性で高速な主記憶装置です。CPUが実行中のプログラムやデータをRAMに展開して処理します。容量が多いほど多くのプログラムを同時に扱えます。"},
+  {id:"3-069",sec:"3-2 メモリ",term:"ROM",
+   statement:"ROMは電源を切ってもデータが消えない不揮発性メモリで、読み出し専用のためデータの書き込みは一切できない。BIOSやファームウェアの格納に使われる。",
+   answer:false,explanation:"ROMの基本は読み出し専用（不揮発性）ですが、現代ではEEPROMやフラッシュメモリなど電気的に書き換えが可能なROMも広く使われています。BIOSのアップデートが可能なのはフラッシュメモリ型ROMを使っているためです。",
+   wrongPoint:"「データの書き込みは一切できない」が誤りです。EEPROM・フラッシュメモリなど電気的に書き換え可能なROMが存在します。"},
+  {id:"3-070",sec:"3-2 メモリ",term:"DRAM",
+   statement:"DRAMはコンデンサに電荷を蓄えてデータを保持するメモリで、定期的にリフレッシュが必要という特性を持ち、SRAMより低コスト・大容量で主記憶（メインメモリ）に広く使われる。",
+   answer:true,explanation:"その通りです。DRAM（ダイナミックRAM）はコンデンサの電荷が時間とともに放電するためリフレッシュが必要です。SRAMに比べ回路が単純なため安価・大容量が可能で、PCのメインメモリに使われます。"},
+  {id:"3-071",sec:"3-2 メモリ",term:"SRAM",
+   statement:"SRAMはフリップフロップ回路でデータを保持するメモリでリフレッシュが不要なため高速だが、DRAMより回路が複雑で高価なためCPUのキャッシュメモリに使われる。",
+   answer:true,explanation:"その通りです。SRAM（スタティックRAM）はフリップフロップで状態を保持するためリフレッシュ不要で非常に高速です。DRAMより高価・低密度なため大容量には不向きで、L1・L2・L3キャッシュに使われます。"},
+  {id:"3-072",sec:"3-2 メモリ",term:"フラッシュメモリ",
+   statement:"フラッシュメモリは電気的にデータを書き換えられる不揮発性メモリで、電源を切ってもデータが保持される。USBメモリ・SDカード・SSDなどに広く使われる。",
+   answer:true,explanation:"その通りです。フラッシュメモリはEEPROMの一種で、ブロック単位での消去と高速な読み書きが特徴です。書き換え回数に上限があるためウェアレベリング技術で寿命を延ばします。"},
+  {id:"3-073",sec:"3-2 メモリ",term:"DIMM",
+   statement:"DIMMはデスクトップPCやサーバ向けのメモリモジュール規格で、基板の両面に端子を持ちデータを同時に転送できる。DDRタイプが一般的である。",
+   answer:true,explanation:"その通りです。DIMM（Dual Inline Memory Module）は基板の両面（表裏）で異なる信号を伝送できます。DDR4・DDR5などの規格があり、複数枚をデュアルチャネル構成で使うとメモリ帯域が向上します。"},
+  {id:"3-074",sec:"3-2 メモリ",term:"SO-DIMM",
+   statement:"SO-DIMMはノートPCや小型デバイス向けのコンパクトなメモリモジュール規格で、DIMMより物理サイズが小さく限られたスペースに高性能メモリを搭載できる。",
+   answer:true,explanation:"その通りです。SO-DIMM（Small Outline DIMM）は通常のDIMMの約半分のサイズです。ノートPC・小型デスクトップ・NASなどスペースが限られた機器のメモリアップグレードに使います。"},
+  {id:"3-075",sec:"3-2 メモリ",term:"主記憶装置",
+   statement:"主記憶装置（メインメモリ）はCPUが直接アクセスできる高速な記憶装置で、一般的にRAMで構成され、実行中のプログラムやデータを一時的に保存する。電源を切るとデータは消える。",
+   answer:true,explanation:"その通りです。主記憶装置はCPUが直接読み書きできる唯一の記憶装置です。補助記憶（HDD・SSD）のデータはCPUが使う前に主記憶に読み込まれます。容量が少ないとスワッピングが多発して性能低下します。"},
+  {id:"3-076",sec:"3-2 メモリ",term:"補助記憶",
+   statement:"補助記憶（補助記憶装置）はHDD・SSD・光ディスクなどの大容量・不揮発性の記憶装置で、OSやアプリ・ユーザーデータを長期保存する。主記憶より容量が大きく低速という特徴がある。",
+   answer:true,explanation:"その通りです。補助記憶は電源を切ってもデータが保持される不揮発性の特性を持ちます。容量はTBクラスでコストは安いですが、主記憶（RAM）よりアクセスが遅いため使用前にRAMへ読み込みます。"},
+  {id:"3-077",sec:"3-2 メモリ",term:"ディスクキャッシュ",
+   statement:"ディスクキャッシュは頻繁にアクセスされるディスクのデータをメモリに一時保持することでディスクアクセスを削減し、システム全体のパフォーマンスを向上させる技術である。",
+   answer:true,explanation:"その通りです。ディスクキャッシュは「時間的局所性（最近アクセスしたデータは近いうちに再度アクセスされる）」の原理を利用します。OSのページキャッシュやディスクコントローラのキャッシュがこれに当たります。"},
+  {id:"3-078",sec:"3-2 メモリ",term:"ライトスルー",
+   statement:"ライトスルーはキャッシュへの書き込みと同時にメインメモリにも書き込むキャッシュポリシーで、キャッシュとメモリの内容が常に一致しデータ整合性が保たれるが、書き込み速度はライトバックより遅い。",
+   answer:true,explanation:"その通りです。ライトスルーはすべての書き込みがメインメモリにも即時反映されるため整合性が高いです。しかし毎回の書き込みでメモリアクセスが発生するためライトバックより低速です。"},
+  {id:"3-079",sec:"3-2 メモリ",term:"ライトバック",
+   statement:"ライトバックはキャッシュへの書き込みのみを先に行いメインメモリへの反映を後でまとめて行うキャッシュポリシーで、ライトスルーより高速だが障害時のデータ損失リスクがある。",
+   answer:true,explanation:"その通りです。ライトバックはキャッシュに書き込んだ後、キャッシュラインが置き換えられる時にまとめてメインメモリに書き戻します。高速ですが電源断などの障害でキャッシュとメモリが不一致になるリスクがあります。"},
+  {id:"3-080",sec:"3-2 メモリ",term:"メモリインターリーブ",
+   statement:"メモリインターリーブは連続したアドレスのデータを複数のメモリバンクに分散配置することで並列アクセスを可能にしてメモリの実効転送速度を向上させる技術である。",
+   answer:true,explanation:"その通りです。メモリインターリーブは連続アドレスを複数バンクにまたがって配置します。例えば4バンク構成なら、連続する4アドレスが異なるバンクに配置され、4バンク同時アクセスで実効速度を最大4倍に改善できます。"},
+  {id:"3-081",sec:"3-2 メモリ",term:"ハードディスク",
+   statement:"ハードディスク（HDD）は回転する磁気円盤（プラッタ）と読み書きヘッドでデータを記録する補助記憶装置で、大容量・低コストが特徴だが機械的な駆動部品があるためSSDより衝撃に弱く低速である。",
+   answer:true,explanation:"その通りです。HDDはプラッタを高速回転させ磁気ヘッドでデータを読み書きします。大容量・低単価ですが機械的部品があるため振動・衝撃に弱く、SSDよりアクセス速度が遅いです。"},
+  {id:"3-082",sec:"3-2 メモリ",term:"SSD",
+   statement:"SSDはNAND型フラッシュメモリを使った補助記憶装置で、HDDに比べ読み書き速度が非常に速く・耐衝撃性が高く・動作音がない特徴があるが、HDDより単価が高い。",
+   answer:true,explanation:"その通りです。SSD（ソリッドステートドライブ）は機械的な駆動部品がないため高速・静音・耐衝撃です。NVMe接続SSDはSATA SSDよりさらに高速で、近年は価格低下により普及が進んでいます。"},
+  {id:"3-083",sec:"3-2 メモリ",term:"ウェアレベリング",
+   statement:"ウェアレベリングはフラッシュメモリの書き込みを全セルに均等に分散させて特定セルへの集中書き込みを防ぎ、SSDや記録媒体の寿命を延ばす技術である。",
+   answer:true,explanation:"その通りです。フラッシュメモリの各セルは書き換え回数に上限（数千〜数万回）があります。ウェアレベリングは書き込みを均等に分散することで特定セルの早期劣化を防ぎ、全体の寿命を延ばします。"},
+  {id:"3-084",sec:"3-2 メモリ",term:"ストリーマ",
+   statement:"ストリーマは磁気テープにデータを順次記録するバックアップ用ストレージで、大容量データの長期保存・アーカイブに適しているが、ランダムアクセスには不向きである。",
+   answer:true,explanation:"その通りです。ストリーマ（テープドライブ）は順次アクセス型の記録媒体です。テープ1本でTBクラスのデータを保存でき、長期保存・オフサイトバックアップに使われますが、特定データへのアクセスには時間がかかります。"},
+  {id:"3-085",sec:"3-2 メモリ",term:"追記型",
+   statement:"追記型（Write-Once Read-Many：WORM）は一度書き込んだデータを変更・削除できないが追加書き込みは可能な記録媒体の形態で、CD-RやDVD-Rがその例である。",
+   answer:true,explanation:"その通りです。追記型はデータの改ざん防止・長期保存に適しています。CD-Rに書き込んだデータは変更できませんが、空き領域があれば追記できます（ただし一般的にセッションを閉じると追記不可になります）。"},
+  {id:"3-086",sec:"3-2 メモリ",term:"書換型",
+   statement:"書換型（Rewriteable）は何度もデータを書き換えられる記録媒体の形態で、CD-RW・DVD-RW・USBメモリがその例である。ただし書き換え回数に限界がある場合もある。",
+   answer:true,explanation:"その通りです。書換型メモリは繰り返し使えますが、フラッシュメモリは書き換え回数に上限があります。CD-RWは約1,000回、光学ディスクは数十〜数百回の書き換えが目安とされます。"},
+  {id:"3-087",sec:"3-2 メモリ",term:"ブルーレイディスク",
+   statement:"ブルーレイディスクは青紫色レーザーを使ってDVDより高密度にデータを記録できる光ディスクで、1層25GB・2層50GBの容量を持ちDVDより大容量の映像やデータを保存できる。",
+   answer:true,explanation:"その通りです。ブルーレイ（Blu-ray Disc）は波長405nmの青紫色レーザーを使いDVDの波長660nmの赤色レーザーより短波長なため高密度記録が可能です。1層25GB・2層50GB・4層100GBなどの容量があります。"},
+  {id:"3-088",sec:"3-2 メモリ",term:"RAMファイル",
+   statement:"RAMファイル（RAMディスク）は主記憶のRAMをあたかもディスクのように使う技術で、HDDやSSDより高速にアクセスできるが揮発性のため電源切断でデータが消える。",
+   answer:true,explanation:"その通りです。RAMディスク（RAMファイル）はRAMをファイルシステムとしてマウントしてディスクのように使います。アクセス速度はSSDより数十倍〜数百倍速いですが電源を切るとデータが消えます。"},
+  {id:"3-089",sec:"3-2 メモリ",term:"CD",
+   statement:"CDはデジタルデータを保存する光ディスクで、CD-ROMは読み出し専用、CD-Rは一度だけ書き込み可能、CD-RWは繰り返し書き換え可能という種類がある。",
+   answer:true,explanation:"その通りです。CDは1982年に登場した光ディスク規格です。CDは700MB程度の容量を持ちます。CD-ROM（読み取り専用）・CD-R（書き込み可能・一度のみ）・CD-RW（書き換え可能）の3種類があります。"},
+  {id:"3-090",sec:"3-2 メモリ",term:"DVD",
+   statement:"DVDはCDより大容量の光ディスクで、DVDビデオの標準規格では片面1層で約4.7GBの容量を持ち、CDと同様にROM・R・RWの種類がある。",
+   answer:true,explanation:"その通りです。DVD（Digital Versatile Disc）は片面1層4.7GB・両面1層9.4GB・片面2層8.5GBなどの容量があります。映画・ソフトウェアの配布に広く使われましたが、現在はBlu-rayや配信サービスへの移行が進んでいます。"},
+  {id:"3-091",sec:"3-2 メモリ",term:"読取り書込み機構",
+   statement:"磁気ディスクの読取り書込み機構では、磁気ヘッドが回転するプラッタ上を移動してデータの読み書きを行い、ヘッドの移動時間がアクセス時間に影響するシーク時間となる。",
+   answer:true,explanation:"その通りです。HDDのアクセス時間はシーク時間（ヘッドが目的トラックに移動する時間）＋回転待ち時間（目的セクタが来るまでの待ち時間）＋転送時間で構成されます。"},
+  {id:"3-092",sec:"3-2 メモリ",term:"アドレス選択機構",
+   statement:"メモリのアドレス選択機構はCPUが指定したアドレスに対応するメモリセルを選択するための仕組みで、アドレスバスのビット数によってアクセスできるメモリ空間の大きさが決まる。",
+   answer:true,explanation:"その通りです。32ビットアドレスバスでは2³²=約4GBのメモリ空間、64ビットでは理論上2⁶⁴の広大なアドレス空間にアクセスできます。アドレスデコーダが指定アドレスに対応するメモリセルを選択します。"},
+  {id:"3-093",sec:"3-2 メモリ",term:"読出し専用型",
+   statement:"読出し専用型（ROM）の記録媒体はデータの読み取りはできるがユーザーによる書き込みや変更はできず、データ改ざん防止や恒久的なデータ配布に使われる。CD-ROMがその例である。",
+   answer:true,explanation:"その通りです。読出し専用型メモリは製造時に書き込まれたデータを保持し、ユーザーは読み取りのみ可能です。ソフトウェアの配布媒体としてのCD-ROM・DVD-ROMや、マスクROMなどがあります。"},
+  {id:"3-094",sec:"3-2 メモリ",term:"記憶部",
+   statement:"コンピュータの記憶部はRAM・ROM・HDD・SSDなどを含む概念で、主記憶（一時的・高速・小容量）と補助記憶（永続的・低速・大容量）に分類される。",
+   answer:true,explanation:"その通りです。コンピュータの記憶階層はレジスタ→キャッシュ→主記憶→補助記憶の順に容量が増え速度が低下します。用途に応じて適切な記憶装置を使い分けることが重要です。"},
+  {id:"3-095",sec:"3-2 メモリ",term:"DIMM",
+   statement:"DIMMはノートPCや小型デバイス向けに設計された小型のメモリモジュールで、通常のDIMMの約半分のサイズが特徴である。",
+   answer:false,explanation:"これはSO-DIMMの説明です。DIMMはデスクトップPCやサーバ向けの標準サイズのメモリモジュールです。ノートPC向けの小型モジュールがSO-DIMM（Small Outline DIMM）です。",
+   wrongPoint:"「ノートPCや小型デバイス向けの小型モジュール」が誤りです。DIMMはデスクトップ・サーバ向けの標準サイズです。小型版がSO-DIMMです。"},
+
+  // ── 3-3 バス ──
+  {id:"3-096",sec:"3-3 バス",term:"バス",
+   statement:"バスはコンピュータ内部でデータを伝送するための共有通信路で、アドレスバス（アドレス伝送）・データバス（データ伝送）・コントロールバス（制御信号）の3種類が基本的な構成要素である。",
+   answer:true,explanation:"その通りです。バスはCPU・メモリ・I/Oデバイス間でデータを共有する通信路です。アドレスバスでアクセス先を指定し、データバスでデータを転送し、コントロールバスで読み書きの制御を行います。"},
+  {id:"3-097",sec:"3-3 バス",term:"内部バス",
+   statement:"内部バスはCPU内部の演算ユニット・レジスタ・キャッシュなど各コンポーネント間を接続するバスで、外部バスより高速で動作する。",
+   answer:true,explanation:"その通りです。内部バスはCPU内部の通信路で、外部との通信に使う外部バス（フロントサイドバス・PCIeなど）より高速に動作します。"},
+  {id:"3-098",sec:"3-3 バス",term:"アドレスバス",
+   statement:"アドレスバスはCPUがアクセスするメモリやI/Oデバイスのアドレスを伝送する一方向の通信路で、バスの幅（ビット数）が大きいほど扱えるアドレス空間が広がる。",
+   answer:true,explanation:"その通りです。アドレスバスはCPUからメモリへの一方向通信路です。32ビットなら4GB（2³²バイト）、64ビットなら理論上16EBのアドレス空間を扱えます。"},
+  {id:"3-099",sec:"3-3 バス",term:"データバス",
+   statement:"データバスはCPU・メモリ・I/Oデバイス間でデータを双方向に伝送する通信路で、バスの幅（ビット数）が広いほど一度に転送できるデータ量が増える。",
+   answer:true,explanation:"その通りです。データバスはCPUがメモリからデータを読む（入力）・メモリへ書く（出力）の双方向通信路です。64ビット幅なら1サイクルで64ビット（8バイト）を転送できます。"},
+  {id:"3-100",sec:"3-3 バス",term:"コントロールバス",
+   statement:"コントロールバスはCPUとメモリ・I/Oデバイス間で読み書きの指示・クロック信号・割込み信号などの制御情報を伝送する通信路で、バス全体の動作を調整する。",
+   answer:true,explanation:"その通りです。コントロールバスにはメモリ読み取り/書き込み信号・I/O読み取り/書き込み信号・割込み要求（IRQ）・バスアクノレッジ（BACK）などの制御信号が流れます。"},
+  {id:"3-101",sec:"3-3 バス",term:"システムバス",
+   statement:"システムバスはCPU・メモリ・周辺機器を接続する内部バスの総称で、データバス・アドレスバス・コントロールバスの3種類で構成される。",
+   answer:true,explanation:"その通りです。システムバスはコンピュータの主要コンポーネントを結ぶ内部通信路の総称です。バス幅と動作周波数がシステム全体のデータ転送速度を決める重要な要因です。"},
+  {id:"3-102",sec:"3-3 バス",term:"PCI",
+   statement:"PCIはコンピュータの周辺機器を接続するためのバス規格で、グラフィックカードやネットワークカードなどの拡張カードをマザーボードに接続するスロットに使われ、後継のPCIe（PCI Express）が現在主流である。",
+   answer:true,explanation:"その通りです。PCI（Peripheral Component Interconnect）は1990年代に普及したバス規格です。その後PCIeが登場し、グラフィックカード・NVMe SSD・ネットワークカードなど高速デバイスの接続に使われています。"},
+  {id:"3-103",sec:"3-3 バス",term:"シリアルバス",
+   statement:"シリアルバスはデータを1ビットずつ順番に転送する方式のバスで、USBやSATA・Thunderboltなどが代表例である。現在はパラレルバスに置き換えられる流れとなっている。",
+   answer:false,explanation:"実際の流れは逆で、シリアルバスがパラレルバスを置き換えています。USBがパラレルポートを、SATAがPATAを、Thunderboltが多くのインタフェースを置き換えました。高速シリアル転送の方が信号干渉が少なく高速化が容易なためです。",
+   wrongPoint:"「パラレルバスに置き換えられる流れ」が逆です。現在はシリアルバスがパラレルバスを置き換えています。"},
+  {id:"3-104",sec:"3-3 バス",term:"パラレルバス",
+   statement:"パラレルバスは複数のデータビットを同時に転送するバスで、一度に多くのデータを送れるが信号線の数が増えるため配線が複雑になりクロック周波数を上げると信号干渉が問題になる。",
+   answer:true,explanation:"その通りです。パラレルバスは多くのデータを同時に転送できますが、信号線の本数が増えると周波数上昇時にスキュー（信号の到達タイミングのずれ）や干渉が問題となります。このため高速化が難しくシリアルバスへの移行が進みました。"},
+  {id:"3-105",sec:"3-3 バス",term:"拡張バス",
+   statement:"拡張バスはマザーボードに新たなハードウェア（グラフィックカード・サウンドカードなど）を追加するためのインタフェースで、PCIやPCI Expressが代表的な規格である。",
+   answer:true,explanation:"その通りです。拡張バス（拡張スロット）はコンピュータの機能を後から追加するための仕組みです。PCI Expressはグラフィックカード・NVMe SSD・高速ネットワークカードなどに使われる現在の主要な拡張バス規格です。"},
+  {id:"3-106",sec:"3-3 バス",term:"外部バス",
+   statement:"外部バスはコンピュータ本体と外部デバイスを接続するためのインタフェースで、USBはその代表的な外部バス規格である。",
+   answer:true,explanation:"その通りです。外部バスはコンピュータと周辺機器を接続します。USB（汎用デバイス）・Thunderbolt（高速外部I/O）・HDMI（映像出力）などが代表的な外部バス規格です。"},
+  {id:"3-107",sec:"3-3 バス",term:"メモリバス",
+   statement:"メモリバスはCPUとRAM間のデータ転送専用のバスで、帯域幅（転送速度）がシステムのメモリ性能に直接影響する。64ビット幅が一般的で、デュアルチャネル構成で帯域幅を2倍にできる。",
+   answer:true,explanation:"その通りです。メモリバスの帯域幅はクロック周波数×バス幅×チャネル数で計算されます。DDR4-3200でデュアルチャネルの場合、最大帯域幅は約51.2GB/sになります。"},
+  {id:"3-108",sec:"3-3 バス",term:"入出力バス",
+   statement:"入出力バスはCPUと周辺機器（プリンタ・ハードディスクなど）の間でデータをやり取りするバスで、メモリバスより一般的に低速で動作する。",
+   answer:true,explanation:"その通りです。I/Oバスはシステムバスとストレージやネットワーク機器などの周辺デバイスを接続します。PCIeが現在の主要なI/Oバスで、USB・SATA・NVMeなどの接続インタフェースを提供します。"},
+  {id:"3-109",sec:"3-3 バス",term:"バスのアクセスモード",
+   statement:"バスのアクセスモードにはシングルワード転送（1ワード単位でのアクセス）とバースト転送（連続したアドレスへのブロック転送）などがあり、バースト転送は連続データの転送効率が高い。",
+   answer:true,explanation:"その通りです。バースト転送はキャッシュラインの転送やDMAによる大量データ転送で使われます。アドレスを一度指定するだけで複数の連続データを転送できるため効率的です。"},
+
+  // ── 3-4 入出力デバイス ──
+  {id:"3-110",sec:"3-4 入出力デバイス",term:"USB",
+   statement:"USBはコンピュータと周辺機器を接続するための標準インタフェースで、プラグアンドプレイ（接続するだけで自動認識）と電力供給の機能も持ち、マウス・キーボード・ストレージなど多様なデバイスを接続できる。",
+   answer:true,explanation:"その通りです。USB（Universal Serial Bus）はUSB 1.1（12Mbps）・USB 2.0（480Mbps）・USB 3.x（5〜20Gbps）・USB4（40Gbps）と世代を重ねて高速化しています。USB Type-Cは映像出力・電力供給・データ転送を1本で担います。"},
+  {id:"3-111",sec:"3-4 入出力デバイス",term:"Thunderbolt",
+   statement:"Thunderboltは最大40Gbpsの高速データ転送が可能なインタフェースで、外部ストレージ・ディスプレイ・ネットワーク機器などをデイジーチェーン接続できるAppleとIntelが共同開発した規格である。",
+   answer:true,explanation:"その通りです。Thunderbolt 3/4はUSB Type-Cコネクタを使い最大40Gbpsの転送速度を実現します。複数のディスプレイや高速ストレージのデイジーチェーン接続が可能で、高性能なCreator向けワークフローに活用されます。"},
+  {id:"3-112",sec:"3-4 入出力デバイス",term:"HDMI",
+   statement:"HDMIは高品質な映像と音声を1本のケーブルで伝送できるデジタルインタフェースで、最新規格ではフルHD・4K・8Kの映像信号も伝送でき、テレビ・PC・ゲーム機などに広く採用されている。",
+   answer:true,explanation:"その通りです。HDMI（High-Definition Multimedia Interface）は映像・音声をデジタルで1本のケーブルに統合した規格です。HDMI 2.1では4K120Hz・8K60Hzに対応し、eARCやVRR（可変リフレッシュレート）もサポートします。"},
+  {id:"3-113",sec:"3-4 入出力デバイス",term:"Bluetooth",
+   statement:"Bluetoothは2.4GHz帯を使う近距離無線通信規格で、スマートフォン・ヘッドフォン・キーボード・マウスなどのデバイス間でワイヤレスデータ転送を可能にする。",
+   answer:true,explanation:"その通りです。Bluetoothは10m前後の近距離無線通信に使われます。Bluetooth 5.0以降は最大400Mbpsの通信速度・300m超の到達距離（屋外）をサポートします。"},
+  {id:"3-114",sec:"3-4 入出力デバイス",term:"BLE",
+   statement:"BLE（Bluetooth Low Energy）は従来のBluetoothより消費電力を大幅に低減した規格で、コイン電池で数ヶ月〜数年動作でき、スマートウォッチ・心拍計・IoTセンサーなどに使われる。",
+   answer:true,explanation:"その通りです。BLE（Bluetooth LE）は省電力が最大の特徴で、IoTデバイスのバッテリー寿命を延ばします。ヘルスケアデバイス・ビーコン・スマートキーなど少量データを断続的に送受信するデバイスに適しています。"},
+  {id:"3-115",sec:"3-4 入出力デバイス",term:"NFC",
+   statement:"NFCは数センチの極めて近距離でのみ通信できる無線通信規格で、電子マネー・交通系ICカード・スマートフォンの非接触決済などに広く使われる。",
+   answer:true,explanation:"その通りです。NFC（Near Field Communication）は通信距離が約4cm以内と非常に短く、意図しない通信を防ぎます。SuicaなどのICカード・Apple Pay・Google Payなどの非接触決済システムに使われています。"},
+  {id:"3-116",sec:"3-4 入出力デバイス",term:"ZigBee",
+   statement:"ZigBeeは低消費電力・低速・近距離の無線通信規格で、多数のセンサーやデバイスをメッシュネットワークで接続するスマートホームやIoT用途に使われる。",
+   answer:true,explanation:"その通りです。ZigBeeはIEEE 802.15.4をベースとした規格で、電力消費を抑えながら多数のデバイスが協調するメッシュネットワークを構築できます。スマートホームの照明制御・温度センサーネットワークなどに使われます。"},
+  {id:"3-117",sec:"3-4 入出力デバイス",term:"シリアルATA",
+   statement:"シリアルATA（SATA）はHDDやSSDをマザーボードに接続するインタフェース規格で、パラレルATAの後継として普及し、ホットスワップ対応で電源を切らずにデバイスを交換できる。",
+   answer:true,explanation:"その通りです。SATA（Serial ATA）はパラレルATA（IDE）に比べ薄いケーブルで高速転送が可能です。SATA 3.0では最大6Gbpsの転送速度を持ちます。現在はNVMe SSDがさらに高速な代替として普及しています。"},
+  {id:"3-118",sec:"3-4 入出力デバイス",term:"IrDA",
+   statement:"IrDAは赤外線を使った近距離無線データ通信の規格で、指向性があり障害物があると通信できないという特性を持つ。かつて携帯電話やPDA間のデータ転送に使われた。",
+   answer:true,explanation:"その通りです。IrDA（赤外線データ協会）規格の赤外線通信は機器を向かい合わせて近距離でデータ転送します。Bluetooth普及前は携帯電話・PDA・プリンタの無線接続に使われましたが現在はほとんど使われません。"},
+  {id:"3-119",sec:"3-4 入出力デバイス",term:"DMA方式",
+   statement:"DMA（Direct Memory Access）はCPUを介さずに周辺デバイスとメモリ間で直接データ転送を行う方式で、CPUは転送中に他の処理を実行できるためシステム全体の効率が向上する。",
+   answer:true,explanation:"その通りです。DMAはDMAコントローラ（DMAC）がCPUの代わりにメモリとI/Oデバイス間のデータ転送を管理します。大量データのHDD・SSD転送・オーディオ・ネットワークなどでCPUの負荷を下げます。"},
+  {id:"3-120",sec:"3-4 入出力デバイス",term:"プログラム制御方式",
+   statement:"プログラム制御方式はCPUがプログラムの命令に従ってI/O処理を直接制御する方式で、入出力デバイスの状態をCPUが繰り返し確認する（ポーリング）ため、CPUが他の処理をできない時間が生じる。",
+   answer:true,explanation:"その通りです。プログラム制御方式（特にポーリング方式）はCPUが常にI/Oデバイスの状態を監視するため、I/O処理中はCPUが他の処理に使えずシステム効率が低下します。"},
+  {id:"3-121",sec:"3-4 入出力デバイス",term:"チャネル制御方式",
+   statement:"チャネル制御方式は専用の入出力プロセッサ（チャネル）がCPUの代わりにI/O処理を管理する方式で、CPUはチャネルに指示を出した後は他の処理を続けられるため、大型コンピュータで多く採用されている。",
+   answer:true,explanation:"その通りです。チャネル制御方式はメインフレーム（汎用コンピュータ）で使われる方式です。専用のI/Oチャネルプロセッサが複数のI/Oデバイスを並行制御しCPUの負荷を最小化します。"},
+  {id:"3-122",sec:"3-4 入出力デバイス",term:"シリアルデータ転送方式",
+   statement:"シリアルデータ転送方式は1本の信号線で1ビットずつデータを順番に転送する方式で、USBやRS-232C・SATAなどがこれに該当する。",
+   answer:true,explanation:"その通りです。シリアル転送は配線が少なくコネクタが小さく信号干渉が少ないため、高速化が容易です。現代のほとんどのI/Oインタフェース（USB・Thunderbolt・SATA・PCIe）はシリアル方式です。"},
+  {id:"3-123",sec:"3-4 入出力デバイス",term:"RS-232C",
+   statement:"RS-232Cはシリアル通信のインタフェース規格でパソコンとモデム・計測機器などを接続するために使われた。最大15m程度の通信距離という制限があり現在は新しい規格に置き換えられている。",
+   answer:true,explanation:"その通りです。RS-232Cはかつてモデム・プリンタ・マウスの接続に使われたシリアル通信規格です。現在はUSBが多くの用途を置き換えていますが、産業機器・計測機器などでは今も使われています。"},
+  {id:"3-124",sec:"3-4 入出力デバイス",term:"DisplayPort",
+   statement:"DisplayPortはデジタル映像・音声を伝送するインタフェースで、主にPC用モニタとの接続に使われ、高解像度・高リフレッシュレートに対応し、1本のケーブルで複数のディスプレイをデイジーチェーン接続できる。",
+   answer:true,explanation:"その通りです。DisplayPort（DP）はPCとモニタ接続に広く使われます。DP 2.0では最大80Gbpsの帯域で8K解像度・高リフレッシュレートに対応します。Mini DisplayPortやUSB Type-C（DP Altモード）でも使われます。"},
+  {id:"3-125",sec:"3-4 入出力デバイス",term:"パラレルデータ転送方式",
+   statement:"パラレルデータ転送方式は複数の信号線で複数ビットを同時に転送する方式で、古いプリンタ接続のパラレルポートやIDE（パラレルATA）がこれに該当するが、現在はシリアル方式に置き換えられている。",
+   answer:true,explanation:"その通りです。パラレル転送は理論上多くのデータを同時に転送できますが、高速化時の信号干渉・スキュー問題のため、現在はシリアル方式が主流です。"},
+
+  // ── 3-5 入出力装置 ──
+  {id:"3-126",sec:"3-5 入出力装置",term:"ポインティングデバイス",
+   statement:"ポインティングデバイスは画面上のカーソルを移動させて操作するための入力装置で、マウス・タッチパッド・トラックボール・スタイラスペンなどが含まれる。",
+   answer:true,explanation:"その通りです。ポインティングデバイスはGUI（グラフィカルユーザーインタフェース）操作に使われます。マウスが最も一般的ですが、ノートPCではタッチパッド、デザイン作業ではペンタブレットも多用されます。"},
+  {id:"3-127",sec:"3-5 入出力装置",term:"マウス",
+   statement:"マウスはコンピュータの代表的なポインティングデバイスで、動かすことで画面上のカーソルを移動させ、ボタンクリックで操作を行う。光学式・レーザー式・ボール式などの種類がある。",
+   answer:true,explanation:"その通りです。現代のマウスは光学センサーで移動量を検出します。一般的な左右ボタンとスクロールホイールに加え、多ボタン・高DPIのゲーミングマウスや人間工学に基づいたエルゴノミクスマウスもあります。"},
+  {id:"3-128",sec:"3-5 入出力装置",term:"タッチパネル・タッチスクリーン",
+   statement:"タッチパネルは指や専用ペンで直接画面を操作できる入力装置で、静電容量式（スマートフォン）と抵抗膜式（タッチペン対応）などがあり、スワイプやピンチなどのマルチタッチ操作が可能である。",
+   answer:true,explanation:"その通りです。現代のスマートフォン・タブレットの多くは静電容量式タッチパネルを使用し、マルチタッチをサポートします。ATM・券売機などには抵抗膜式が使われることが多いです。"},
+  {id:"3-129",sec:"3-5 入出力装置",term:"キーボード",
+   statement:"キーボードはコンピュータへの文字入力の基本入力装置で、ワイヤレス型・メカニカル型・膜式（メンブレン）型など様々な種類がある。",
+   answer:true,explanation:"その通りです。キーボードは最も基本的な入力デバイスです。メカニカル（スイッチ式）・メンブレン・静電容量式など構造の違いで打鍵感が異なります。ゲーミング用・人間工学設計型など多様な製品があります。"},
+  {id:"3-130",sec:"3-5 入出力装置",term:"スキャナー",
+   statement:"スキャナーは紙の文書や写真などをデジタルデータに変換する入力装置で、光学センサーで文書を読み取りPDFや画像ファイルとしてコンピュータに取り込む。",
+   answer:true,explanation:"その通りです。スキャナーは光を当てて反射光をCCDやCMOSセンサーで検出しデジタル化します。フラットベッド型・フィードスルー型・ハンディ型などがあり、OCRソフトと組み合わせて文書のテキスト化にも使われます。"},
+  {id:"3-131",sec:"3-5 入出力装置",term:"OCR",
+   statement:"OCR（光学文字認識）は画像やスキャンした文書中の文字を認識してデジタルテキストデータに変換する技術で、紙文書のデジタル化・請求書の自動処理などに活用される。",
+   answer:true,explanation:"その通りです。OCRは印刷文字だけでなく手書き文字の認識も行えます。AI/ディープラーニングの発展で認識精度が大幅に向上し、銀行の小切手処理・荷物の伝票読み取り・医療記録のデジタル化などに活用されています。"},
+  {id:"3-132",sec:"3-5 入出力装置",term:"OMR",
+   statement:"OMR（光学マーク認識）は専用用紙の所定位置に付けられたマークを光学的に読み取る技術で、マークシート式試験の採点や選挙の投票用紙集計などに使われる。",
+   answer:true,explanation:"その通りです。OMRはマークの有無を光の反射差で読み取ります。大学入試センター試験・各種資格試験・アンケート集計などで大量の答案を高速・正確に処理できます。"},
+  {id:"3-133",sec:"3-5 入出力装置",term:"ペンタブレット",
+   statement:"ペンタブレットはペン状のスタイラスで手書き入力や絵を描くための入力装置で、感圧センサーがペンの筆圧・傾きを検出して描画の太さや透明度を変えられるため、デジタルアート・デザインに使われる。",
+   answer:true,explanation:"その通りです。ペンタブレットはデジタルアーティスト・グラフィックデザイナー・写真レタッチャーが使う専門的入力デバイスです。WacomがリードするブランドでiPadなどのタブレットデバイスにも筆圧対応ペン（Apple Pencil）があります。"},
+  {id:"3-134",sec:"3-5 入出力装置",term:"デジタイザー",
+   statement:"デジタイザーはアナログデータをデジタル形式に変換する装置で、ペンタブレットに似た機能を持つが特に精密な位置入力が必要なCADや地図データの入力などの専門的用途に使われる。",
+   answer:true,explanation:"その通りです。デジタイザーは電磁誘導などの技術で高精度な位置データを取得します。CAD図面のデジタル化・地図データの入力・医療画像の解析などの専門用途に使われます。"},
+  {id:"3-135",sec:"3-5 入出力装置",term:"バーコード読取装置",
+   statement:"バーコード読取装置はバーコードに含まれる情報をレーザーや光学センサーで読み取りデジタルデータに変換する装置で、スーパーのレジ・物流・在庫管理に広く使われる。",
+   answer:true,explanation:"その通りです。バーコードリーダーは1次元バーコードと2次元コード（QRコード）を読み取ります。スーパーのPOSシステム・宅配便の荷物追跡・製造現場の部品管理などに使われ、業務効率化に貢献します。"},
+  {id:"3-136",sec:"3-5 入出力装置",term:"磁気カード読取装置",
+   statement:"磁気カード読取装置は磁気ストライプに記録された情報を読み取る装置で、クレジットカード・キャッシュカード・社員証などの読み取りに使われる。",
+   answer:true,explanation:"その通りです。磁気ストライプはカードの裏面の黒いストライプ部分です。スワイプ（カードを通す）操作で磁気ヘッドが情報を読み取ります。セキュリティ上の脆弱性からICカードや非接触カードへの移行が進んでいます。"},
+  {id:"3-137",sec:"3-5 入出力装置",term:"ICカード読取装置",
+   statement:"ICカード読取装置はICチップを内蔵したカードの情報を読み取る装置で、接触型（端子を差し込む）と非接触型（近距離無線通信）があり、電子マネー・交通系ICカード・身分証明書などに使われる。",
+   answer:true,explanation:"その通りです。ICカードは磁気カードより記憶容量が大きく改ざんに強い特性を持ちます。接触型はクレジットカードのEMVチップ決済、非接触型はSuica・PASMOなどの交通系ICカードに使われます。"},
+  {id:"3-138",sec:"3-5 入出力装置",term:"生体認証装置",
+   statement:"生体認証装置は指紋・顔・虹彩・声紋などの生体情報を読み取って個人を認証する装置で、パスワードより高いセキュリティを提供しスマートフォンの解錠・入退室管理などに使われる。",
+   answer:true,explanation:"その通りです。生体認証（バイオメトリクス認証）は「なりすまし」が難しく利便性も高いセキュリティ手法です。スマートフォンの指紋センサー・顔認証・空港の電子ゲートでの顔認証など多くの場面で使われています。"},
+  {id:"3-139",sec:"3-5 入出力装置",term:"A/Dコンバータ",
+   statement:"A/Dコンバータはアナログ信号（連続値）をデジタル信号（離散値）に変換する装置で、マイクの音声・温度センサーの値などをコンピュータで処理できるデジタルデータに変換するために使われる。",
+   answer:true,explanation:"その通りです。A/DコンバータはアナログをデジタルのPCMデータに変換します。サンプリング周波数（1秒間にサンプリングする回数）と量子化ビット数（1サンプルの精度）が変換品質を決めます。"},
+  {id:"3-140",sec:"3-5 入出力装置",term:"D/Aコンバータ",
+   statement:"D/Aコンバータはデジタル信号（離散値）をアナログ信号（連続値）に変換する装置で、コンピュータで処理したデジタル音楽データをスピーカーで再生するための音声信号に変換するために使われる。",
+   answer:true,explanation:"その通りです。D/AコンバータはA/Dコンバータの逆変換を行います。音楽再生のほか、DAC（Digital-to-Analog Converter）はオーディオ機器の心臓部として音質を大きく左右します。"},
+  {id:"3-141",sec:"3-5 入出力装置",term:"液晶ディスプレイ",
+   statement:"液晶ディスプレイ（LCD）は液晶の光透過率を制御して映像を表示するディスプレイで、薄型・軽量・省電力という特徴を持ち、テレビ・PCモニタ・スマートフォンに広く使われる。",
+   answer:true,explanation:"その通りです。LCDはバックライトの光を液晶で制御して表示します。IPS・VA・TNパネルなど種類があり、それぞれ視野角・応答速度・コントラストのトレードオフがあります。"},
+  {id:"3-142",sec:"3-5 入出力装置",term:"有機ELディスプレイ",
+   statement:"有機ELディスプレイ（OLED）は各画素が自発光するためバックライトが不要で、LCDより薄型・軽量・高コントラストを実現でき、スマートフォンのハイエンドモデルやテレビに使われる。",
+   answer:true,explanation:"その通りです。有機EL（OLED）は画素自体が発光するため黒を完全な黒として表示でき、コントラスト比が非常に高いです。バックライト不要で薄型化・フレキシブル（曲がる）ディスプレイも実現できます。"},
+  {id:"3-143",sec:"3-5 入出力装置",term:"TFT液晶",
+   statement:"TFT液晶は各ピクセルを薄膜トランジスタ（TFT）で個別制御することで高解像度・高画質を実現する液晶ディスプレイで、現代のPCモニタ・テレビ・スマートフォンの主流技術である。",
+   answer:true,explanation:"その通りです。TFT（Thin-Film Transistor）液晶は各ピクセルに独立したトランジスタを持つアクティブマトリクス方式です。パッシブマトリクス方式のSTN液晶より応答速度・解像度・視野角が優れます。"},
+  {id:"3-144",sec:"3-5 入出力装置",term:"STN液晶",
+   statement:"STN液晶はTFT液晶に比べて視野角と応答速度が優れており、現代のスマートフォンや高品質モニタに主に採用されている。",
+   answer:false,explanation:"STN液晶はTFT液晶より視野角・応答速度が劣ります。低コスト・低消費電力が特徴で、フィーチャーフォンや携帯ゲーム機のような用途に使われました。現代のスマートフォンやモニタにはTFT液晶や有機ELが主に使われます。",
+   wrongPoint:"「TFT液晶に比べて視野角と応答速度が優れている」「現代のスマートフォンや高品質モニタに主に採用」が誤りです。STNはTFTより視野角・応答速度が劣り低コスト機器向けです。"},
+  {id:"3-145",sec:"3-5 入出力装置",term:"ヘッドマウントディスプレイ",
+   statement:"ヘッドマウントディスプレイ（HMD）は頭部に装着して使用するディスプレイで、VR（仮想現実）やAR（拡張現実）体験に使われ、ユーザーの頭の動きに追随して映像が更新される。",
+   answer:true,explanation:"その通りです。HMDはOculus Quest・PlayStation VRなどのVRヘッドセットが代表例です。両目への映像提供とヘッドトラッキングで没入感の高い体験を実現します。"},
+  {id:"3-146",sec:"3-5 入出力装置",term:"インタレースモード",
+   statement:"インタレースモードは奇数行と偶数行を交互に描画して全フレームを表示するディスプレイ方式で、低帯域で動きのある映像を表現するために使われたが、現在はプログレッシブ方式が主流である。",
+   answer:true,explanation:"その通りです。インタレース方式はNTSC・PALなどのアナログテレビ放送や一部のデジタル放送で使われます。「1080i」の「i」がインタレースを示し、「1080p」の「p」はプログレッシブを示します。"},
+  {id:"3-147",sec:"3-5 入出力装置",term:"ノンインタレースモード",
+   statement:"ノンインタレースモード（プログレッシブ方式）は全行を順番に一度に描画する方式で、インタレース方式より滑らかな表示が可能で、現代のほとんどのディスプレイで採用されている。",
+   answer:true,explanation:"その通りです。プログレッシブ（ノンインタレース）方式は毎フレームで全走査線を描画するため、動きの激しい映像でもちらつきが少なくクリアに表示できます。現代のモニタ・テレビの主流方式です。"},
+  {id:"3-148",sec:"3-5 入出力装置",term:"電子ペーパー",
+   statement:"電子ペーパーは電気泳動技術などで紙に似た表示を実現するディスプレイで、表示更新時以外は電力を消費せず日光下でも視認性が高い。電子書籍リーダーに広く採用されている。",
+   answer:true,explanation:"その通りです。電子ペーパー（e-ink）はKindleなどの電子書籍リーダーで使われます。一度表示した画像は電力不要で保持でき、反射型のため日光下でも見やすく目が疲れにくいですが、表示更新速度が遅くカラー表示の鮮明度は低いです。"},
+  {id:"3-149",sec:"3-5 入出力装置",term:"レーザープリンター",
+   statement:"レーザープリンターはレーザー光で感光体ドラムに静電気でトナーを付着させ熱と圧力で紙に定着させる印刷装置で、高速・高精度な印刷が可能でオフィスで広く使われる。",
+   answer:true,explanation:"その通りです。レーザープリンターはコピー機と同じ電子写真方式を使います。高速・高品質・1枚あたりのコストが安いためオフィス向けに広く普及しています。トナー（粉末インク）を使用します。"},
+  {id:"3-150",sec:"3-5 入出力装置",term:"インクジェットプリンター",
+   statement:"インクジェットプリンターは微細なノズルからインクを噴射して印刷する装置で、写真の高品質印刷が得意で家庭用に広く普及している。本体が安価でランニングコスト（インク代）は比較的高い。",
+   answer:true,explanation:"その通りです。インクジェットプリンターは液体インクを微細な液滴にして紙に吹き付けます。写真プリントに優れ家庭向けに普及していますが、印刷枚数が多いとインクコストが高くなる傾向があります。"},
+  {id:"3-151",sec:"3-5 入出力装置",term:"インパクトプリンター",
+   statement:"インパクトプリンターはリボンを物理的に叩いて印字するプリンターで、騒音が大きいが複写式伝票の印刷が可能なため現在もビジネス帳票などで使われている。",
+   answer:true,explanation:"その通りです。ドットマトリクスプリンターが代表的なインパクトプリンターです。印字の際に物理的な衝撃を利用するため複数枚のカーボン紙への同時印刷（複写）が可能です。"},
+  {id:"3-152",sec:"3-5 入出力装置",term:"3Dプリンター",
+   statement:"3Dプリンターはデジタルデータを基に素材を層状に積み重ねて立体物を造形する装置で、樹脂・金属・セラミックスなど様々な素材を使えプロトタイプ製作・医療機器・航空宇宙部品の製造に活用される。",
+   answer:true,explanation:"その通りです。3Dプリンターは積層造形（アディティブマニュファクチャリング）技術です。FDM（熱溶解積層）・SLA（光造形）・SLS（粉末焼結）など多様な方式があり、試作から最終製品まで幅広く活用されています。"},
+  {id:"3-153",sec:"3-5 入出力装置",term:"プロジェクター",
+   statement:"プロジェクターは映像をスクリーンや壁に投影する出力装置で、プレゼンテーション・映画鑑賞・教育現場などで使われ、解像度と輝度（ルーメン）が性能の主要な指標である。",
+   answer:true,explanation:"その通りです。プロジェクターはLCD・DLP・LASERなどの投射方式があります。輝度（ルーメン）は明るい環境での視認性に、解像度は映像のくっきりさに影響します。"},
+  {id:"3-154",sec:"3-5 入出力装置",term:"音声出力装置",
+   statement:"音声出力装置はデジタルまたはアナログの音声信号を音として出力する装置で、スピーカーとヘッドフォンが代表例である。コンピュータからの音声はD/Aコンバータでアナログ変換されてから出力される。",
+   answer:true,explanation:"その通りです。デジタル音声データはD/Aコンバータでアナログ信号に変換された後、アンプで増幅されてスピーカーやヘッドフォンから出力されます。"},
+  {id:"3-155",sec:"3-5 入出力装置",term:"ハードディスク装置",
+   statement:"ハードディスク装置（HDD）はプラッタと呼ばれる磁気ディスクが高速回転し読み書きヘッドでデータを読み書きする記憶装置で、大容量・低コストだがSSDより低速で衝撃に弱い。",
+   answer:true,explanation:"その通りです。HDDの内部では複数枚のプラッタが数千〜1万rpm以上で回転し、磁気ヘッドがナノメートル単位の隙間でデータを読み書きします。現在はデータアーカイブ用途などでSSDと使い分けられます。"},
+  {id:"3-156",sec:"3-5 入出力装置",term:"SSD",
+   statement:"SSD（ソリッドステートドライブ）は機械的な可動部品がなくNAND型フラッシュメモリを使った記憶装置で、HDDより高速・静音・耐衝撃に優れ、価格低下により現代のコンピュータの主要ストレージとなっている。",
+   answer:true,explanation:"その通りです。SSDはNVMe接続（PCIe）とSATA接続があり、NVMe SSDはSATA SSDの約5〜10倍高速です。価格対容量比が改善し、現在はノートPC・デスクトップ共にSSDが主流ストレージとなっています。"},
+  {id:"3-157",sec:"3-5 入出力装置",term:"磁気テープ装置",
+   statement:"磁気テープ装置は磁気テープにデータを順次記録する記憶装置で、1本で数TB以上のデータを安価に保存できるが、ランダムアクセスが不得意でデータアーカイブ・バックアップ用途に使われる。",
+   answer:true,explanation:"その通りです。LTOテープなどの磁気テープは単位容量あたりのコストが最も安いストレージメディアの一つです。コールドデータ（めったにアクセスしないデータ）の長期保存に適しています。"},
+  {id:"3-158",sec:"3-5 入出力装置",term:"トラック",
+   statement:"磁気ディスクのトラックは円盤（プラッタ）表面の同心円状のデータ記録経路で、外周から内周にかけて番号が付けられ、ヘッドの移動先を指定するためのシーク操作の単位となる。",
+   answer:true,explanation:"その通りです。HDDのプラッタ表面は多数の同心円状トラックに分割されています。ヘッドが目的トラックに移動する時間がシーク時間で、HDDのアクセス時間の主要な要素です。"},
+  {id:"3-159",sec:"3-5 入出力装置",term:"シリンダ",
+   statement:"磁気ディスクのシリンダは複数プラッタの同じ半径位置にある全トラックをまとめた論理的な単位で、ヘッドを移動させずに複数プラッタにアクセスできるためシリンダ単位でのアクセスが効率的である。",
+   answer:true,explanation:"その通りです。例えばプラッタが3枚（両面×3=6面）あれば同じ半径位置の6トラックが1シリンダを構成します。シリンダ内のデータはヘッド移動（シーク）なしに読めるため、データをシリンダ単位で配置するとアクセス効率が上がります。"},
+  {id:"3-160",sec:"3-5 入出力装置",term:"セクター",
+   statement:"磁気ディスクのセクターはトラックをさらに細かく分割した最小のデータ管理単位で、一般的に512バイトまたは4KBの固定サイズを持ち、OSはセクターを複数まとめたクラスタ単位でファイルを管理する。",
+   answer:true,explanation:"その通りです。セクターはディスクの最小読み書き単位です。OSは複数セクターからなるクラスタ（アロケーションユニット）単位でファイルを管理します。小さいファイルでも最低1クラスタ分の領域を使います。"},
+  {id:"3-161",sec:"3-5 入出力装置",term:"デフラグメンテーション",
+   statement:"デフラグメンテーション（断片化解消）はHDDのファイルが断片化して散在している状態を整理し、ファイルを連続した領域に再配置することでアクセス速度を改善する。SSDにはデフラグは基本的に不要である。",
+   answer:true,explanation:"その通りです。HDDはファイルの断片化が蓄積するとシーク時間が増えて低速化します。デフラグでファイルを連続配置することでアクセスが改善します。SSDはランダムアクセスが高速で機械的なシーク動作がないためデフラグ不要（むしろ書き換え回数が増え劣化する）です。"},
+  {id:"3-162",sec:"3-5 入出力装置",term:"ブロック化因数",
+   statement:"磁気テープのブロック化因数は1物理ブロックにまとめる論理レコードの数を示し、値が大きいほどブロック間隔の割合が減りテープ利用効率が向上するが、バッファメモリが多く必要になる。",
+   answer:true,explanation:"その通りです。磁気テープはブロック（物理レコード）とブロックの間に機械的停止のための空白（IBG：Inter Block Gap）が必要です。ブロック化因数を大きくすると相対的にIBGの割合が減り記録密度が向上します。"},
+  {id:"3-163",sec:"3-5 入出力装置",term:"ブロック間隔",
+   statement:"磁気テープのブロック間隔（IBG：Inter Block Gap）はデータブロック間の空白領域で、テープの停止・再起動の機械的特性に対応するために設けられ、ブロック化因数を大きくするとIBGの割合を下げられる。",
+   answer:true,explanation:"その通りです。IBG（Inter-Block Gap）は磁気テープが停止・起動する際の機械的な慣性に対応するための空白です。IBGが多いと実際のデータ記録領域が減りテープの利用効率が低下します。"},
+  {id:"3-164",sec:"3-5 入出力装置",term:"SDカードリーダー",
+   statement:"SDカードリーダーはSDカードやMicroSDカードのデータをパソコンで読み書きするための装置で、デジタルカメラやスマートフォンで撮った写真・動画をPCに取り込む際に使われる。",
+   answer:true,explanation:"その通りです。SDカードリーダーはUSB接続の外付け型や、PC内蔵型のスロットがあります。SDカードにはSDHC・SDXC・microSD・microSDXCなどの規格があり、容量と速度クラスが異なります。"},
+  {id:"3-165",sec:"3-5 入出力装置",term:"有線LANインタフェースカード",
+   statement:"有線LANインタフェースカード（NIC）はコンピュータをイーサネットLANに接続するためのハードウェアで、MACアドレスによるデータのフレーム化やネットワークへの接続を担う。",
+   answer:true,explanation:"その通りです。NIC（Network Interface Card）はRJ-45コネクタでLANケーブルを接続し、IPアドレスをMAC アドレスに対応させてネットワーク通信を行います。現代のPCには有線LANポートがマザーボードに内蔵されていることが多いです。"},
+  {id:"3-166",sec:"3-5 入出力装置",term:"無線LANインタフェースカード",
+   statement:"無線LANインタフェースカード（Wi-Fiカード）はIEEE 802.11規格に準拠した無線通信を行いアクセスポイントを経由してネットワークに接続するためのハードウェアで、ノートPCやスマートフォンに標準搭載されている。",
+   answer:true,explanation:"その通りです。Wi-Fi規格はWi-Fi 4（802.11n）・Wi-Fi 5（802.11ac）・Wi-Fi 6（802.11ax）・Wi-Fi 6E・Wi-Fi 7と進化し、最新規格ほど高速・低遅延・多接続に対応しています。"},
+  {id:"3-167",sec:"3-5 入出力装置",term:"アイトラッキングデバイス",
+   statement:"アイトラッキングデバイスはユーザーの視線方向や視点移動を追跡する装置で、UI/UXの研究・広告効果分析・ゲームやVRへのインタラクション追加などに活用される。",
+   answer:true,explanation:"その通りです。アイトラッカーは近赤外線照射と反射光の解析でユーザーの視線を追跡します。ウェブサイトのヒートマップ生成・注意分析・障害者向けコンピュータ入力補助デバイスとしても使われます。"},
+  {id:"3-168",sec:"3-5 入出力装置",term:"ハプティックデバイス",
+   statement:"ハプティックデバイスは触覚を通じて情報を伝える出力装置で、スマートフォンのバイブレーション・ゲームコントローラーの振動フィードバック・VR手袋などが例として挙げられる。",
+   answer:true,explanation:"その通りです。ハプティック技術（触覚フィードバック）はユーザーに触感・力感・振動を伝えます。スマートフォンの通知バイブ・ゲームコントローラーの振動・外科手術ロボットの力フィードバックなどに使われます。"},
+  {id:"3-169",sec:"3-5 入出力装置",term:"ジョイスティック",
+   statement:"ジョイスティックはスティックを操作して方向や角度を入力する入力装置で、ゲーム・フライトシミュレーター・産業用ロボットの操縦などに使われる。",
+   answer:true,explanation:"その通りです。ジョイスティックは方向性のある入力に適しており、飛行機・船舶・クレーンなどの操縦制御や、ゲームコントローラーのアナログスティックとして広く使われます。"},
+  {id:"3-170",sec:"3-5 入出力装置",term:"トラックボール",
+   statement:"トラックボールは球を転がしてカーソルを操作する入力装置で、本体を動かす必要がないため省スペースで使えるほか、手首への負担が少なく長時間作業に向いている。",
+   answer:true,explanation:"その通りです。トラックボールはマウスと異なり本体を移動させずにボールだけを回転させてカーソルを操作します。机のスペースが限られた環境や、精密な操作が必要なグラフィックデザインの場面で使われます。"},
+  {id:"3-171",sec:"3-5 入出力装置",term:"音声入力装置",
+   statement:"音声入力装置はマイクロフォンと音声認識技術を組み合わせてユーザーの音声をテキストデータやコマンドに変換する入力装置で、スマートフォンの音声アシスタントや音声テキスト入力に活用される。",
+   answer:true,explanation:"その通りです。現代の音声認識はAI・ディープラーニングにより精度が大幅に向上しています。SiriやGoogleアシスタント・Amazon Alexaなどの音声アシスタントがこの技術を活用しています。"},
+  {id:"3-172",sec:"3-5 入出力装置",term:"デジタルカメラ",
+   statement:"デジタルカメラは光学レンズで取り込んだ光をCCD・CMOSイメージセンサーで電子データに変換して記録するカメラで、フィルムカメラと異なり撮影後すぐに確認・編集・転送ができる。",
+   answer:true,explanation:"その通りです。デジタルカメラはフィルムの代わりに半導体イメージセンサーで光を電気信号に変換します。撮影した画像は即時確認でき、SDカードなどに保存してPCに転送・編集できます。"},
+  {id:"3-173",sec:"3-5 入出力装置",term:"ノンインパクトプリンター",
+   statement:"ノンインパクトプリンターは物理的な打撃なしに印字するプリンターの総称で、レーザープリンターやインクジェットプリンターが含まれ、インパクトプリンターより静粛・高速・高品質である。",
+   answer:true,explanation:"その通りです。ノンインパクトプリンターはリボンを叩く機械的動作がないため静かで高品質です。レーザー（電子写真）方式・インクジェット方式・熱転写方式などが含まれます。"},
+  {id:"3-174",sec:"3-5 入出力装置",term:"シリアルプリンター",
+   statement:"シリアルプリンターは1文字ずつ順番に印刷するプリンターで、印刷速度が遅いがコストが低く特殊用紙への印刷に対応できる。ドットマトリクスプリンターがその代表例である。",
+   answer:true,explanation:"その通りです。シリアルプリンター（キャラクタプリンター）は文字を左から右へ1文字ずつ印刷します。ドットマトリクスプリンターはインクリボンを打つ衝撃で印字し、速度は遅いですが複写印刷が可能です。"},
+  {id:"3-175",sec:"3-5 入出力装置",term:"ラインプリンター",
+   statement:"ラインプリンターは1行分を一度にまとめて印刷するプリンターで、シリアルプリンターより高速で大量印刷に向いており、企業の大型システムでの帳票印刷に使われた。",
+   answer:true,explanation:"その通りです。ラインプリンターは1行全体のハンマーやドラムを同時に駆動して1行を一括印刷します。シリアルプリンターより数十倍〜数百倍高速で、大型コンピュータの出力装置として使われました。"},
+  {id:"3-176",sec:"3-5 入出力装置",term:"ページプリンター",
+   statement:"ページプリンターは1ページ分のデータを内部メモリに蓄積してから一括印刷するプリンターで、レーザープリンターが代表例であり高速・高品質な印刷が可能である。",
+   answer:true,explanation:"その通りです。ページプリンター（ページ記述言語プリンター）は1ページ全体のレンダリングを内部で行い一括印刷します。レーザープリンターはPDLとして PostScript・PCLなどを使います。"},
+  {id:"3-177",sec:"3-5 入出力装置",term:"プロッター",
+   statement:"プロッターは設計図や地図など精密な線画を大判サイズで出力する専用の出力装置で、建築設計やエンジニアリングの図面出力に使われる。",
+   answer:true,explanation:"その通りです。プロッターはペンを精密に動かして線を描く（ペン式）か、インクジェット方式で大判印刷を行います。建築・製造・GIS（地理情報システム）の大判図面出力に使われます。"},
+  {id:"3-178",sec:"3-5 入出力装置",term:"CD-R/RWドライブ",
+   statement:"CD-R/RWドライブはCD-R（一度書き込み専用）とCD-RW（書き換え可能）ディスクの読み書きに対応するドライブで、レーザー光を使ってデータを読み書きする光学式ドライブである。",
+   answer:true,explanation:"その通りです。CD-Rは有機色素膜にレーザーで記録し一度のみ書き込めます。CD-RWは相変化合金を使い繰り返し書き換えができます。現在はデータ配布・音楽CDなどの用途では配信サービスやUSBメモリに置き換わっています。"},
+  {id:"3-179",sec:"3-5 入出力装置",term:"DVD-R/RWドライブ",
+   statement:"DVD-R/RWドライブはCDより大容量のDVD-R（一度書き込み専用）とDVD-RW（書き換え可能）ディスクの読み書きに対応するドライブである。",
+   answer:true,explanation:"その通りです。DVD-Rは片面1層で4.7GBの容量を持ちます。DVDはCDより波長の短い650nm赤色レーザーを使い高密度記録を実現します。現在はBlu-rayや配信サービスに移行しつつあります。"},
+  {id:"3-180",sec:"3-5 入出力装置",term:"ブルーレイドライブ",
+   statement:"ブルーレイドライブはBlu-rayディスクの読み書きに対応するドライブで、1層25GBの大容量を実現し映像コンテンツの記録や大容量データのアーカイブに使われる。多くの機種はDVD・CDの読み書きにも対応している。",
+   answer:true,explanation:"その通りです。ブルーレイドライブは405nm青紫色レーザーを使い高密度記録を実現します。4K映像の配布や高容量バックアップに使われます。現在はゲーム機（PS5など）にも搭載されています。"},
+
+  // ── 追加問題（合計190問になるよう追加） ──
+  {id:"3-181",sec:"3-5 入出力装置",term:"VGA",
+   statement:"VGAは1987年にIBMが導入した640×480ピクセルの解像度を持つアナログ映像出力規格で、後のディスプレイ規格の基礎となった。現在はHDMIやDisplayPortに置き換えられつつある。",
+   answer:true,explanation:"その通りです。VGA（Video Graphics Array）は長年PCのディスプレイ接続標準でした。アナログ接続のため画質に限界があり、現在はデジタル接続のHDMI・DisplayPort・USB-Cに置き換えられています。"},
+  {id:"3-182",sec:"3-5 入出力装置",term:"SVGA",
+   statement:"SVGAはVGAの上位規格で800×600ピクセルの解像度を提供する映像出力規格である。",
+   answer:true,explanation:"その通りです。SVGA（Super VGA）は800×600解像度を提供するVGA上位互換規格です。1990年代に普及しましたが現在はフルHD（1920×1080）・4K（3840×2160）などがメインです。"},
+  {id:"3-183",sec:"3-5 入出力装置",term:"XGA",
+   statement:"XGAはSVGAの上位規格で1920×1080ピクセルのフルHD解像度を提供する映像出力規格で、現在でも多くのモニターの標準解像度として使われている。",
+   answer:false,explanation:"XGA（Extended Graphics Array）の解像度は1024×768ピクセルです。1920×1080はフルHD（Full HD）の解像度です。XGAはかつてのノートPCやプロジェクターで標準的に使われた解像度です。",
+   wrongPoint:"「1920×1080ピクセルのフルHD解像度」が誤りです。XGAは1024×768ピクセルの解像度です。"},
+  {id:"3-184",sec:"3-5 入出力装置",term:"磁気テープ装置",
+   statement:"磁気テープ装置はランダムアクセス（任意の位置への高速アクセス）が得意なため、大量データのリアルタイム検索・参照に適したストレージとして現在も広く使われている。",
+   answer:false,explanation:"磁気テープ装置はシーケンシャルアクセス（順次アクセス）型であり、ランダムアクセスは得意ではありません。任意のデータにアクセスするにはテープを巻き戻す必要があり時間がかかります。リアルタイム検索にはHDD・SSDが使われます。",
+   wrongPoint:"「ランダムアクセスが得意」が誤りです。磁気テープはシーケンシャルアクセス型であり、ランダムアクセスは不得意です。"},
+  {id:"3-185",sec:"3-3 バス",term:"データバス",
+   statement:"データバスはCPUからメモリへの一方向のみデータを転送する通信路で、メモリからCPUへの読み取りには別の専用バスが使われる。",
+   answer:false,explanation:"データバスは双方向の通信路です。CPUがメモリからデータを読み取る際も、メモリへデータを書き込む際も同じデータバスを使い、方向は制御バスの信号で制御されます。",
+   wrongPoint:"「一方向のみデータを転送する」が誤りです。データバスはCPU↔メモリ間の双方向通信路です。"},
+  {id:"3-186",sec:"3-2 メモリ",term:"SRAM",
+   statement:"SRAMはDRAMと同様にリフレッシュが必要な揮発性メモリで、低コストで大容量化が容易なためメインメモリとして広く使われる。",
+   answer:false,explanation:"SRAMはリフレッシュが「不要」な揮発性メモリです。フリップフロップ回路で状態を保持するためリフレッシュ不要で高速ですが、DRAMより回路が複雑で高コスト・低密度です。メインメモリにはDRAMが使われます。",
+   wrongPoint:"「リフレッシュが必要」「低コストで大容量化が容易でメインメモリに使われる」が誤りです。SRAMはリフレッシュ不要・高速ですが高コストのためキャッシュに使われます。"},
+  {id:"3-187",sec:"3-1 プロセッサ",term:"GPU",
+   statement:"GPU（グラフィックス処理装置）は当初3Dグラフィックスや映像処理専用だったが、現在では大量の並列演算が必要なAI・機械学習・科学計算にも広く活用されている。",
+   answer:true,explanation:"その通りです。GPUは数千〜数万の小コアで大量データの並列処理が得意です。GPGPU（汎用GPUコンピューティング）としてCUDA（NVIDIA）やOpenCLが使われ、ディープラーニングの学習・推論で欠かせないハードウェアとなっています。"},
+  {id:"3-188",sec:"3-2 メモリ",term:"フラッシュメモリ",
+   statement:"フラッシュメモリは書き換え可能な不揮発性メモリだが、HDDと異なりビット単位での上書きが可能であり、書き換え前に消去処理が不要である。",
+   answer:false,explanation:"フラッシュメモリはビット単位やバイト単位での上書きができません。書き込み前には必ずブロック単位での消去処理が必要です。HDDは磁気記録を直接上書きできますがフラッシュは消去→書き込みの手順が必要です。",
+   wrongPoint:"「ビット単位での上書きが可能」「書き換え前に消去処理が不要」が誤りです。フラッシュメモリはブロック単位での消去が必要で、ビット単位の上書きはできません。"},
+  {id:"3-189",sec:"3-1 プロセッサ",term:"パイプライン",
+   statement:"パイプライン処理はすべての命令が同じ数のクロックサイクルで完了することを前提とした技術で、命令間に依存関係（前の命令の結果を次の命令が使う）があっても性能に影響しない。",
+   answer:false,explanation:"パイプラインでは命令間のデータ依存（RAWハザード）・構造ハザード・制御ハザード（分岐命令）などがパイプラインの停止（ストール）を引き起こし性能に影響します。これらのハザードへの対処がパイプライン設計の重要課題です。",
+   wrongPoint:"「依存関係があっても性能に影響しない」が誤りです。命令間の依存関係はハザードを引き起こし、パイプラインの停止（ストール）として性能に影響します。"},
+  {id:"3-190",sec:"3-5 入出力装置",term:"OCR",
+   statement:"OCRは光学文字認識の略で、スキャナーなどで読み取った文書の画像から文字を自動認識してデジタルテキストに変換する技術であり、AIの進化によって手書き文字の認識精度も向上している。",
+   answer:true,explanation:"その通りです。OCR（Optical Character Recognition）は印刷文字だけでなく手書き文字も認識できます。ディープラーニングベースのOCRは複雑なフォント・手書き・傾いた文書も高精度に認識し、請求書処理・書類デジタル化・翻訳前処理などに活用されています。"}
+];
+
+const CAT_ID="3",WEAK_KEY="fe_weak_v1",BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let selectedSecs=new Set();
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(score,total){const prev=getBest();if(!prev||score/total>prev.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total}));}
+function toggleSec(btn){const s=btn.dataset.sec;if(selectedSecs.has(s)){selectedSecs.delete(s);btn.classList.remove('active');}else{selectedSecs.add(s);btn.classList.add('active');}}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const best=getBest();document.getElementById('best-score-stat').textContent=best?`${best.score}/${best.total}`:'—';}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');if(name==='weak')renderWeakList();if(name==='start')updateStartStats();}
+function showTab(name){showView(name);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getPool(){if(selectedSecs.size===0)return QUESTIONS;return QUESTIONS.filter(q=>[...selectedSecs].some(s=>q.sec.startsWith(s)));}
+function startQuiz(mode){
+  lastMode=mode;let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(getPool()).slice(0,10);}
+  else{pool=shuffle(getPool());}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-section-tag').textContent=q.sec;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(userAnswer){
+  const q=currentQueue[currentIdx],isCorrect=(userAnswer===q.answer);
+  if(isCorrect)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(userAnswer&&!isCorrect)mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const total=currentQueue.length,pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>

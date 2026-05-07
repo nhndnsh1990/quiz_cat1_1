@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2 アルゴリズムとプログラミング ○×クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#4f9cf9;--accent2:#7c5cbf;--correct:#22c55e;--wrong:#ef4444;--text:#e2e8f0;--text2:#8892a4;--text3:#4a5568;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;}
+  .header{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .back-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:.2s;}
+  .back-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .header-title{font-size:16px;font-weight:700;}
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);}
+  .view{width:100%;max-width:760px;display:none;}
+  .view.active{display:block;}
+  .start-hero{text-align:center;padding:40px 0 32px;}
+  .start-cat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+  .start-title{font-size:32px;font-weight:900;margin-bottom:8px;}
+  .start-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .start-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text3);margin-top:2px;}
+  .section-select{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+  .section-title{font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;}
+  .section-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .sec-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:.2s;}
+  .sec-btn:hover,.sec-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,156,249,.08);}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .mode-btn{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;font-family:inherit;color:var(--text);transition:.2s;text-align:left;}
+  .mode-btn:hover{border-color:var(--accent);}
+  .mode-btn.primary{border-color:var(--accent);background:rgba(79,156,249,.06);}
+  .mode-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .mode-icon{font-size:24px;margin-bottom:8px;}
+  .mode-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .mode-desc{font-size:12px;color:var(--text2);}
+  .quiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+  .q-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+  .q-term{font-size:26px;font-weight:900;margin-bottom:6px;}
+  .q-section-tag{font-size:11px;color:var(--accent2);background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.25);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:18px;}
+  .q-statement{font-size:16px;line-height:1.8;color:var(--text);background:var(--surface2);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .btn-circle{font-family:inherit;font-size:36px;font-weight:900;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text2);padding:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .btn-circle span{font-size:13px;font-weight:500;}
+  .btn-circle:hover{transform:scale(1.03);}
+  .btn-circle.correct-btn:hover{border-color:var(--correct);color:var(--correct);}
+  .btn-circle.wrong-btn:hover{border-color:var(--wrong);color:var(--wrong);}
+  .btn-circle:disabled{cursor:not-allowed;opacity:.5;transform:none;}
+  .btn-circle.flash-correct{border-color:var(--correct);background:rgba(34,197,94,.12);color:var(--correct);}
+  .btn-circle.flash-wrong{border-color:var(--wrong);background:rgba(239,68,68,.12);color:var(--wrong);}
+  .result-card{border-radius:14px;padding:20px;margin-bottom:16px;display:none;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .result-card.correct-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);}
+  .result-card.wrong-card{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);}
+  .result-verdict{font-size:18px;font-weight:900;margin-bottom:10px;}
+  .correct-card .result-verdict{color:var(--correct);}
+  .wrong-card .result-verdict{color:var(--wrong);}
+  .result-explanation{font-size:14px;line-height:1.7;color:var(--text2);}
+  .wrong-point{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:13px;color:#fca5a5;}
+  .wrong-point strong{display:block;margin-bottom:4px;color:var(--wrong);}
+  .next-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:12px;cursor:pointer;transition:.2s;display:none;}
+  .next-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .score-view{text-align:center;padding:20px 0;}
+  .score-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),var(--surface2) 0);display:flex;align-items:center;justify-content:center;margin:24px auto 10px;box-shadow:0 0 40px rgba(79,156,249,.2);position:relative;}
+  .score-ring::before{content:'';position:absolute;inset:14px;background:var(--bg);border-radius:50%;}
+  .score-num{font-size:30px;font-weight:900;position:relative;z-index:1;}
+  .score-label{color:var(--text2);font-size:14px;margin-bottom:24px;}
+  .score-message{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .btn-primary{background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 28px;border:none;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:12px 20px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .wrong-summary{margin-top:20px;text-align:left;}
+  .ws-title{font-size:14px;color:var(--text2);margin-bottom:10px;}
+  .ws-item{background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  .ws-term{font-weight:700;margin-bottom:4px;}
+  .ws-ans{font-size:12px;color:var(--text2);}
+  .weak-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .weak-title{font-size:20px;font-weight:900;}
+  .btn-clear{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--wrong);font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  .weak-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--wrong);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .wi-term{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .wi-count{font-size:12px;color:var(--wrong);font-family:'JetBrains Mono',monospace;}
+  .wi-stmt{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;}
+  .empty{text-align:center;padding:48px 0;color:var(--text3);}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;}
+  .tab-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-family:inherit;font-size:14px;padding:10px;border-radius:10px;cursor:pointer;transition:.2s;}
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media (max-width: 480px){
+    body{padding:16px 12px 60px;}
+    .start-title{font-size:24px;}
+    .start-hero{padding:24px 0 20px;}
+    .start-stats{gap:10px;}
+    .stat-card{padding:12px 16px;}
+    .stat-num{font-size:22px;}
+    .section-btns{gap:6px;}
+    .sec-btn{font-size:12px;padding:5px 10px;}
+    .mode-btn{padding:14px 12px;}
+    .mode-icon{font-size:20px;margin-bottom:6px;}
+    .mode-name{font-size:14px;}
+    .question-card{padding:20px 16px;}
+    .q-term{font-size:20px;}
+    .q-statement{font-size:15px;line-height:1.7;padding:12px 14px;}
+    .btn-circle{font-size:28px;padding:14px 10px;}
+    .result-card{padding:16px;}
+    .result-verdict{font-size:16px;}
+    .result-explanation{font-size:13px;}
+    .wrong-point{font-size:12px;}
+    .score-ring{width:110px;height:110px;}
+    .score-ring::before{inset:12px;}
+    .score-num{font-size:24px;}
+    .score-message{font-size:20px;}
+    .score-actions{flex-direction:column;align-items:center;}
+    .btn-primary,.btn-outline{width:100%;max-width:280px;text-align:center;}
+    .header-title{font-size:14px;}
+    .wi-term{font-size:15px;}
+    .weak-title{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← 一覧へ</a>
+  <div class="header-title">2 アルゴリズムとプログラミング</div>
+  <div class="header-meta">146問</div>
+</div>
+
+<div class="view active" id="view-start">
+  <div class="start-hero">
+    <div class="start-cat">CATEGORY 2</div>
+    <div class="start-title">アルゴリズムとプログラミング</div>
+    <div class="start-sub">146問収録 ／ セクション別出題対応</div>
+  </div>
+  <div class="start-stats">
+    <div class="stat-card"><div class="stat-num">146</div><div class="stat-label">総問題数</div></div>
+    <div class="stat-card"><div class="stat-num" id="weak-count-stat">0</div><div class="stat-label">苦手問題</div></div>
+    <div class="stat-card"><div class="stat-num" id="best-score-stat">—</div><div class="stat-label">ベストスコア</div></div>
+  </div>
+  <div class="section-select">
+    <div class="section-title">📂 出題セクションを選択（複数可・未選択=全て）</div>
+    <div class="section-btns">
+      <button class="sec-btn" data-sec="2-1" onclick="toggleSec(this)">2-1 データ構造 (28)</button>
+      <button class="sec-btn" data-sec="2-2" onclick="toggleSec(this)">2-2 アルゴリズム (27)</button>
+      <button class="sec-btn" data-sec="2-3" onclick="toggleSec(this)">2-3 プログラミング (39)</button>
+      <button class="sec-btn" data-sec="2-4" onclick="toggleSec(this)">2-4 プログラム言語 (19)</button>
+      <button class="sec-btn" data-sec="2-5" onclick="toggleSec(this)">2-5 その他の言語 (33)</button>
+    </div>
+  </div>
+  <div class="mode-grid">
+    <button class="mode-btn primary" onclick="startQuiz('all')"><div class="mode-icon">📚</div><div class="mode-name">全問モード</div><div class="mode-desc">選択セクションを全問</div></button>
+    <button class="mode-btn" onclick="startQuiz('random')"><div class="mode-icon">🎲</div><div class="mode-name">ランダム10問</div><div class="mode-desc">ランダムに10問出題</div></button>
+    <button class="mode-btn" id="weak-mode-btn" onclick="startQuiz('weak')" disabled><div class="mode-icon">🎯</div><div class="mode-name">苦手問題モード</div><div class="mode-desc">間違えた問題を再出題</div></button>
+    <button class="mode-btn" onclick="showTab('weak')"><div class="mode-icon">📋</div><div class="mode-name">苦手一覧</div><div class="mode-desc">記録を確認する</div></button>
+  </div>
+</div>
+
+<div class="view" id="view-quiz">
+  <div class="quiz-meta">
+    <span class="quiz-progress" id="quiz-progress">1 / 146</span>
+    <span class="quiz-progress" id="quiz-score-live">正解 0</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="question-card">
+    <div class="q-label">QUESTION</div>
+    <div class="q-term" id="q-term">—</div>
+    <div class="q-section-tag" id="q-section-tag">—</div>
+    <div class="q-statement" id="q-statement">—</div>
+  </div>
+  <div class="answer-btns">
+    <button class="btn-circle correct-btn" id="btn-maru" onclick="answer(true)">○<span>正しい</span></button>
+    <button class="btn-circle wrong-btn" id="btn-batsu" onclick="answer(false)">×<span>誤り</span></button>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="result-verdict" id="result-verdict">—</div>
+    <div class="result-explanation" id="result-explanation">—</div>
+    <div class="wrong-point" id="wrong-point" style="display:none"><strong>❌ 誤っている箇所</strong><span id="wrong-point-text">—</span></div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<div class="view" id="view-score">
+  <div class="score-view">
+    <div class="score-message" id="score-message">お疲れさまでした！</div>
+    <div class="score-ring" id="score-ring" style="--pct:0"><div class="score-num" id="score-num">0/0</div></div>
+    <div class="score-label" id="score-label">正解率 0%</div>
+    <div class="wrong-summary" id="wrong-summary"></div>
+    <div class="score-actions">
+      <button class="btn-outline" onclick="showView('start')">スタートに戻る</button>
+      <button class="btn-primary" onclick="startQuiz(lastMode)">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-weak">
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showView('start')">← スタート</button>
+    <button class="tab-btn active">苦手一覧</button>
+  </div>
+  <div class="weak-header">
+    <div class="weak-title">苦手問題一覧</div>
+    <button class="btn-clear" onclick="clearWeak()">リセット</button>
+  </div>
+  <div id="weak-list-body"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ── 2-1 データ構造 ──
+  {id:"2-01",sec:"2-1 データ構造",term:"リスト",
+   statement:"リストとは同じデータ型の要素を順序付けて並べた集合であり、インデックスを使って特定の要素に直接アクセスすることができる。",
+   answer:true,
+   explanation:"その通りです。リストは要素を順序付けて管理するデータ構造です。インデックスで特定の位置の要素にアクセスでき、要素の追加・削除・検索が可能です。"},
+  {id:"2-02",sec:"2-1 データ構造",term:"配列",
+   statement:"配列は同じ種類のデータを連続したメモリ領域に格納するデータ構造で、インデックスによる直接アクセスが可能であり、要素数が固定の静的配列と可変の動的配列がある。",
+   answer:true,
+   explanation:"その通りです。配列はインデックスで要素に直接O(1)でアクセスできるため検索が高速です。サイズ固定の静的配列と必要に応じてサイズを変更できる動的配列があります。"},
+  {id:"2-03",sec:"2-1 データ構造",term:"線形リスト",
+   statement:"線形リストとは各要素が一つの前方要素と一つの後方要素を持つ順序データ構造であり、最初から最後まで順にアクセスすることができる。",
+   answer:true,
+   explanation:"その通りです。線形リストは要素が線形（一直線）に並んだデータ構造で、先頭から末尾まで順番にアクセスします。連絡先リストやウィンドウのタブ管理などに使われます。"},
+  {id:"2-04",sec:"2-1 データ構造",term:"単方向リスト",
+   statement:"単方向リスト（片方向リスト）は各ノードが次のノードへのポインタを持つリスト構造であり、先頭（ヘッド）からは辿れるが末尾から先頭方向には辿ることができない。",
+   answer:true,
+   explanation:"その通りです。単方向リストは各ノードが次のノードへの参照のみを持ちます。先頭から末尾へは辿れますが逆方向への参照を持たないため末尾から先頭には辿れません。"},
+  {id:"2-05",sec:"2-1 データ構造",term:"双方向リスト",
+   statement:"双方向リスト（双連結リスト）は各ノードが前後両方のノードへのポインタを持つリスト構造であり、単方向リストと異なり両方向に辿ることができる。",
+   answer:true,
+   explanation:"その通りです。双方向リストは各ノードに「前のノードへの参照」と「次のノードへの参照」の両方があります。前後どちらの方向にも辿ることができ柔軟な操作が可能です。"},
+  {id:"2-06",sec:"2-1 データ構造",term:"環状リスト",
+   statement:"環状リスト（循環リスト）は最後のノードが最初のノードに接続されているリスト構造であり、一方向に辿り続けると最初に戻ってくる。",
+   answer:true,
+   explanation:"その通りです。環状リストは末尾のノードが先頭ノードを指すことでリングを形成します。音楽プレーヤーのリピート再生・OSのラウンドロビンスケジューリングなどに使われます。"},
+  {id:"2-07",sec:"2-1 データ構造",term:"スタック",
+   statement:"スタックはLIFO（Last In First Out：後入れ先出し）方式のデータ構造であり、最後に追加した要素が最初に取り出される。",
+   answer:true,
+   explanation:"その通りです。スタックは本を積み重ねたイメージで、最後に置いた本を最初に取る（LIFO）構造です。関数呼び出しのコールスタック・ブラウザの戻る機能・逆ポーランド記法の計算などに使われます。"},
+  {id:"2-08",sec:"2-1 データ構造",term:"キュー",
+   statement:"キューはFIFO（First In First Out：先入れ先出し）方式のデータ構造であり、最初に追加した要素が最初に取り出される。プリンタの印刷待ちジョブ管理などに使われる。",
+   answer:true,
+   explanation:"その通りです。キューは行列（待ち行列）のイメージで、先に並んだ人が先にサービスを受ける（FIFO）構造です。OSのプロセススケジューリング・ネットワークのパケット処理などに使われます。"},
+  {id:"2-09",sec:"2-1 データ構造",term:"プッシュ",
+   statement:"プッシュとはスタックからデータを取り出す操作であり、スタックの最上部のデータを削除して返す。",
+   answer:false,
+   explanation:"プッシュはスタックへデータを「追加する」操作です。スタックからデータを取り出す操作はポップ（Pop）です。",
+   wrongPoint:"「スタックからデータを取り出す操作」が誤りです。プッシュはスタックにデータを追加する操作です。取り出しはポップです。"},
+  {id:"2-10",sec:"2-1 データ構造",term:"ポップ",
+   statement:"ポップとはスタックの最上部にあるデータを取り出して削除する操作であり、LIFO原則に従いプッシュした順とは逆の順でデータが取り出される。",
+   answer:true,
+   explanation:"その通りです。ポップ（Pop）はスタックから最後にプッシュされた要素を取り出す操作です。LIFO（後入れ先出し）の原則に従い、最後に追加したものが最初に取り出されます。"},
+  {id:"2-11",sec:"2-1 データ構造",term:"木構造",
+   statement:"木構造は根（ルート）から枝分かれした階層的なデータ構造であり、ファイルシステムや組織図など親子関係のあるデータの表現に適している。",
+   answer:true,
+   explanation:"その通りです。木構造は1つの根ノードから枝（エッジ）で繋がったノード（節点）の集まりです。階層関係のあるデータの表現や効率的な検索・挿入に使われます。"},
+  {id:"2-12",sec:"2-1 データ構造",term:"根",
+   statement:"木構造において根（ルート）とは最下層に位置する子ノードを持たないノードのことであり、木の中に複数存在することができる。",
+   answer:false,
+   explanation:"根（ルート）は木構造の最上位に位置するノードで、親ノードを持ちません。「最下層の子ノードを持たないノード」は葉（リーフ）の説明です。また根は木全体に1つだけ存在します。",
+   wrongPoint:"「最下層に位置する子ノードを持たないノード」が誤りです。それは葉（リーフ）の説明です。根は最上位にある唯一のノードです。"},
+  {id:"2-13",sec:"2-1 データ構造",term:"葉",
+   statement:"木構造において葉（リーフ）とは子ノードを持たない末端のノードのことであり、ファイルシステムでは個々のファイルが葉に相当する。",
+   answer:true,
+   explanation:"その通りです。葉（リーフ）は木の末端に位置するノードで子ノードを持ちません。ファイルシステムではディレクトリが内部ノード、個々のファイルが葉に相当します。"},
+  {id:"2-14",sec:"2-1 データ構造",term:"2分木",
+   statement:"2分木（二分木）は各ノードが最大2つの子ノードを持つ木構造であり、左の子と右の子を持つことができる。",
+   answer:true,
+   explanation:"その通りです。2分木（Binary Tree）は各ノードの子ノードが最大2個（左の子・右の子）の木構造です。完全2分木・バランス2分木・2分探索木など多くの変種があります。"},
+  {id:"2-15",sec:"2-1 データ構造",term:"完全2分木",
+   statement:"完全2分木はすべてのノードが必ず2つの子ノードを持ち、最後のレベルのノードが左詰めで配置された2分木である。",
+   answer:true,
+   explanation:"その通りです。完全2分木はすべての内部ノードが2つの子を持ち、最後の階層のノードが左から詰められて配置されます。ヒープデータ構造の実装に使われます。"},
+  {id:"2-16",sec:"2-1 データ構造",term:"バランス木",
+   statement:"バランス木は左右の部分木の高さの差を一定範囲内に保つことで最悪の場合でもO(log n)での検索・挿入・削除を実現するデータ構造であり、AVL木や赤黒木が代表例である。",
+   answer:true,
+   explanation:"その通りです。バランス木は木の高さを均等に保ち、最悪ケースでもO(log n)の性能を保証します。通常の2分探索木は最悪O(n)になりますが、AVL木・赤黒木などの自己平衡木はO(log n)を保ちます。"},
+  {id:"2-17",sec:"2-1 データ構造",term:"2分探索木",
+   statement:"2分探索木は各ノードの左の子孫ノードすべての値がそのノードより小さく、右の子孫ノードすべての値がそのノードより大きいという条件を満たす2分木である。",
+   answer:true,
+   explanation:"その通りです。2分探索木（BST）は左サブツリー＜ノード値＜右サブツリーという順序条件を持ちます。この特性により平均O(log n)での検索・挿入・削除が可能です。"},
+  {id:"2-18",sec:"2-1 データ構造",term:"B木",
+   statement:"B木はデータベースやファイルシステムで使われる自己平衡多分木で、1つのノードに複数のキーと子ノードへのポインタを持てるため、ディスクへのアクセス回数を削減できる。",
+   answer:true,
+   explanation:"その通りです。B木（B-tree）は1ノードに多くのデータを格納できる多分木で、2分木より木の高さが低くなりディスクI/Oが少なくて済みます。データベースのインデックス構造として広く使われます。"},
+  {id:"2-19",sec:"2-1 データ構造",term:"AVL木",
+   statement:"AVL木はバランスの取れた2分探索木の一種であり、任意のノードで左右の部分木の高さの差が常に2以上にならないように自動的にバランスを保つ。",
+   answer:false,
+   explanation:"AVL木では任意のノードで左右の部分木の高さの差が「1以下」（差が0または1）になるように保ちます。差が2以上になった場合は回転操作でバランスを回復します。",
+   wrongPoint:"「高さの差が常に2以上にならないように」が誤りです。正しくは「高さの差が1以下（差が0か1）になるように」保ちます。"},
+  {id:"2-20",sec:"2-1 データ構造",term:"深さ優先探索",
+   statement:"深さ優先探索（DFS）はグラフや木構造の探索においてできるだけ深く進んでから別の経路を試す手法であり、スタック（または再帰）を使って実装される。",
+   answer:true,
+   explanation:"その通りです。DFS（Depth-First Search）は一つの経路を可能な限り深く探索してから戻り、別の経路を試します。再帰またはスタックで実装でき、迷路探索・トポロジカルソート・連結成分の検出などに使われます。"},
+  {id:"2-21",sec:"2-1 データ構造",term:"幅優先探索",
+   statement:"幅優先探索（BFS）はグラフや木構造の探索において出発点から近い順に階層ごとに探索する手法であり、キューを使って実装される。最短経路探索に適している。",
+   answer:true,
+   explanation:"その通りです。BFS（Breadth-First Search）はルートに近いノードから順に探索し、キューを使って訪問予定ノードを管理します。重みなしグラフの最短経路探索や、ネットワークの最小ホップ経路探索に適しています。"},
+  {id:"2-22",sec:"2-1 データ構造",term:"先行順",
+   statement:"先行順（プレオーダー）は木構造の走査順序の一つで、根ノード→左サブツリー→右サブツリーの順に処理を行う。木の複製や構造のシリアライズに使われる。",
+   answer:true,
+   explanation:"その通りです。先行順（Pre-order）は「根→左→右」の順で走査します。木の構造をそのまま表現でき、木の複製や構文木の処理に使われます。"},
+  {id:"2-23",sec:"2-1 データ構造",term:"後行順",
+   statement:"後行順（ポストオーダー）は木構造の走査順序の一つで、左サブツリー→右サブツリー→根ノードの順に処理を行い、逆ポーランド記法の式評価に適している。",
+   answer:true,
+   explanation:"その通りです。後行順（Post-order）は「左→右→根」の順で走査します。子ノードが親より先に処理されるため、式木の評価（逆ポーランド記法）や木の削除処理に使われます。"},
+  {id:"2-24",sec:"2-1 データ構造",term:"中間順",
+   statement:"中間順（インオーダー）は木構造の走査順序の一つで、根ノード→左サブツリー→右サブツリーの順に処理を行い、2分探索木をソートされた順で取得できる。",
+   answer:false,
+   explanation:"中間順（In-order）は「左サブツリー→根ノード→右サブツリー」の順です。「根→左→右」の順は先行順（Pre-order）です。2分探索木を中間順で走査するとデータを昇順に取得できます。",
+   wrongPoint:"「根ノード→左サブツリー→右サブツリー」が誤りです。中間順は「左→根→右」の順です。"},
+  {id:"2-25",sec:"2-1 データ構造",term:"多分木",
+   statement:"多分木（N分木）は各ノードがN個（任意の数）の子ノードを持てる木構造であり、ファイルシステムのディレクトリ構造がその典型例である。",
+   answer:true,
+   explanation:"その通りです。多分木はN-ary Treeとも呼ばれ、2分木とは異なり各ノードの子ノード数に制限がありません。ファイルシステムの階層構造はディレクトリが複数のファイル・サブディレクトリを持てる多分木の例です。"},
+  {id:"2-26",sec:"2-1 データ構造",term:"探索木",
+   statement:"探索木は各ノードにキーが格納され、ノード間に順序関係が定義されることで効率的なデータの挿入・削除・検索を可能にする木構造の総称であり、2分探索木はその代表例である。",
+   answer:true,
+   explanation:"その通りです。探索木はデータの順序に基づいた木構造で、2分探索木（BST）・B木・AVL木・赤黒木などが含まれます。ランダムアクセスより効率的な検索・挿入・削除を実現します。"},
+  {id:"2-27",sec:"2-1 データ構造",term:"順序木",
+   statement:"順序木は各ノードの子ノードに順序（左・中・右など）が定義された木構造であり、HTMLのDOMツリーはその代表例で、要素の表示順序が子ノードの順番に依存する。",
+   answer:true,
+   explanation:"その通りです。順序木では子ノードの並び順に意味があります。HTMLのDOMツリーは要素の表示順序が子ノードの順番に依存する典型的な順序木です。"},
+  {id:"2-28",sec:"2-1 データ構造",term:"環状リスト",
+   statement:"環状リストは最後の要素が最初の要素に接続されたリスト構造であり、この特性を活かしてOSのラウンドロビンスケジューリングや音楽プレーヤーのリピート機能などに応用される。",
+   answer:true,
+   explanation:"その通りです。環状リストは末尾から先頭に戻る循環構造を持ちます。CPUのラウンドロビンスケジューリング（各プロセスを順番に一定時間ずつ実行）や音楽・動画のリピート再生などに活用されます。"},
+
+  // ── 2-2 アルゴリズム ──
+  {id:"2-29",sec:"2-2 アルゴリズム",term:"流れ図",
+   statement:"流れ図（フローチャート）はプロセスや手順を視覚的に表現する図で、処理・判断・端子・データなどの記号を使ってアルゴリズムや業務フローを表現する。",
+   answer:true,
+   explanation:"その通りです。フローチャートはISOで記号が規格化されており、長方形（処理）・ひし形（判断）・端子（開始・終了）・平行四辺形（入出力）などを使います。アルゴリズムの可視化に広く使われます。"},
+  {id:"2-30",sec:"2-2 アルゴリズム",term:"選択ソート",
+   statement:"選択ソートは未整列部分から最小値（または最大値）を選んで整列済み部分の末尾に移動する操作を繰り返すソートアルゴリズムで、計算量はO(n²)である。",
+   answer:true,
+   explanation:"その通りです。選択ソートは毎回未整列部分の最小値を見つけて先頭と交換します。シンプルですがデータ数nに対して常にO(n²)の時間がかかるため、大きなデータには不向きです。"},
+  {id:"2-31",sec:"2-2 アルゴリズム",term:"バブルソート",
+   statement:"バブルソートは隣り合う要素を比較して順序が逆なら交換する操作を繰り返すソートアルゴリズムで、最悪・平均ともO(n²)の計算量であるが実装がシンプルである。",
+   answer:true,
+   explanation:"その通りです。バブルソートは隣接要素の比較・交換を繰り返し、大きな値が「泡が浮かぶように」末尾へ移動します。最悪・平均O(n²)で大量データには非効率ですが理解・実装が簡単です。"},
+  {id:"2-32",sec:"2-2 アルゴリズム",term:"マージソート",
+   statement:"マージソートは分割統治法に基づくソートアルゴリズムで、データを分割→再帰的にソート→マージするという手順で動作し、最悪計算量もO(n log n)を保証する安定ソートである。",
+   answer:true,
+   explanation:"その通りです。マージソートは最悪・平均ともO(n log n)を保証し、同じ値の相対順序を保つ安定ソートです。ただし元の配列と同サイズの補助領域が必要です。"},
+  {id:"2-33",sec:"2-2 アルゴリズム",term:"挿入ソート",
+   statement:"挿入ソートは未整列部分から1要素ずつ取り出し整列済み部分の適切な位置に挿入するアルゴリズムで、ほぼ整列済みのデータに対してはO(n)に近い高速動作をする。",
+   answer:true,
+   explanation:"その通りです。挿入ソートはカードの手札整理のイメージです。最悪O(n²)ですが、ほぼ整列済みデータでは比較・移動が少なくO(n)に近くなります。少量データには実用的です。"},
+  {id:"2-34",sec:"2-2 アルゴリズム",term:"シェルソート",
+   statement:"シェルソートは挿入ソートを改良したアルゴリズムで、間隔（ギャップ）を設けてデータを粗くソートしてから間隔を縮めていくことで挿入ソートより効率的にソートを行う。",
+   answer:true,
+   explanation:"その通りです。シェルソートは挿入ソートの「遠い要素の交換に時間がかかる」弱点を改善します。最初は大きな間隔でグループソートし段階的に間隔を縮めることで全体を効率的に整列させます。"},
+  {id:"2-35",sec:"2-2 アルゴリズム",term:"クイックソート",
+   statement:"クイックソートはピボット（基準値）を選び、それより小さい要素と大きい要素に分割して再帰的にソートするアルゴリズムで、平均計算量はO(n log n)だが最悪はO(n²)になる場合がある。",
+   answer:true,
+   explanation:"その通りです。クイックソートは平均O(n log n)で実用上最速に近いソートですが、ピボット選択が悪い場合（例：既にソート済みのデータに最小値をピボットに選ぶ）は最悪O(n²)になります。"},
+  {id:"2-36",sec:"2-2 アルゴリズム",term:"ヒープソート",
+   statement:"ヒープソートはヒープ（二分ヒープ）というデータ構造を利用したソートアルゴリズムで、最悪の場合でもO(n log n)の計算量を保証するが安定ソートではない。",
+   answer:true,
+   explanation:"その通りです。ヒープソートはデータをヒープに変換し最大値を順次取り出します。最悪・平均ともO(n log n)で追加メモリが不要ですが、同じ値の相対順序を保証しない不安定ソートです。"},
+  {id:"2-37",sec:"2-2 アルゴリズム",term:"線形探索法",
+   statement:"線形探索法（逐次探索）はリストの先頭から末尾まで順番に目的の値を探す最もシンプルな探索アルゴリズムで、データが整列されていなくても使えるがO(n)の計算量がかかる。",
+   answer:true,
+   explanation:"その通りです。線形探索はデータを先頭から1つずつ比較して目的の値を探します。データの整列は不要ですが最悪n回の比較が必要でO(n)です。小規模データや整列されていないデータに使います。"},
+  {id:"2-38",sec:"2-2 アルゴリズム",term:"2分探索法",
+   statement:"2分探索法（バイナリサーチ）は整列済みデータの中央値と比較して探索範囲を半分に絞ることを繰り返すアルゴリズムで、O(log n)の計算量で高速に探索できる。ただしデータが整列済みであることが前提条件である。",
+   answer:true,
+   explanation:"その通りです。2分探索は探索範囲を毎回半分に絞るためO(log n)で高速ですが、データが事前に整列されていることが必須条件です。n=1億個のデータでも最大27回程度の比較で探索できます。"},
+  {id:"2-39",sec:"2-2 アルゴリズム",term:"ハッシュ表探索法",
+   statement:"ハッシュ表探索法はキーをハッシュ関数で変換したインデックスを使ってデータを格納・検索する方法で、理想的な場合はO(1)で検索できるが、ハッシュ衝突が発生する場合がある。",
+   answer:true,
+   explanation:"その通りです。ハッシュ表（ハッシュマップ）はO(1)の平均検索時間を実現する高速なデータ構造です。ただし複数のキーが同じハッシュ値を持つ「衝突」が発生する場合があり、これに対処するためチェイン法やオープンアドレス法が使われます。"},
+  {id:"2-40",sec:"2-2 アルゴリズム",term:"再帰的アルゴリズム",
+   statement:"再帰的アルゴリズムは問題を同じ構造の部分問題に分解して自身を呼び出すことで解決する手法であり、必ず終了条件（基底ケース）を設ける必要がある。",
+   answer:true,
+   explanation:"その通りです。再帰は自分自身を呼び出すことで複雑な問題を簡潔に記述できます。ただし終了条件がないと無限再帰でスタックオーバーフローになります。フィボナッチ数列・ハノイの塔・木の走査などに使われます。"},
+  {id:"2-41",sec:"2-2 アルゴリズム",term:"最短経路探索",
+   statement:"最短経路探索はグラフ内である頂点から他の頂点への最小コスト経路を求めるアルゴリズムであり、ダイクストラ法やベルマンフォード法が代表的な手法である。",
+   answer:true,
+   explanation:"その通りです。最短経路探索はナビゲーション・ネットワークルーティング・物流最適化などに応用されます。ダイクストラ法は非負の重みのグラフに高速、ベルマンフォード法は負の重みにも対応できます。"},
+  {id:"2-42",sec:"2-2 アルゴリズム",term:"ダイクストラ法",
+   statement:"ダイクストラ法は単一始点から他のすべての頂点への最短経路を求めるアルゴリズムで、負の重みを持つ辺を含むグラフでも正しく動作する。",
+   answer:false,
+   explanation:"ダイクストラ法は辺の重みがすべて非負（0以上）のグラフでのみ正しく動作します。負の重みを持つ辺が含まれる場合は正しい結果を保証できません。負の重みにはベルマンフォード法を使います。",
+   wrongPoint:"「負の重みを持つ辺を含むグラフでも正しく動作する」が誤りです。ダイクストラ法は辺の重みが非負の場合のみ正しく動作します。"},
+  {id:"2-43",sec:"2-2 アルゴリズム",term:"ベルマンフォード法",
+   statement:"ベルマンフォード法は単一始点からの最短経路を求めるアルゴリズムで、ダイクストラ法と異なり負の重みを持つ辺のあるグラフにも対応でき、負のサイクルの検出も可能である。",
+   answer:true,
+   explanation:"その通りです。ベルマンフォード法はO(V×E)の計算量でダイクストラ法より遅いですが、負の重みの辺にも対応できます。また全辺をV-1回更新した後に更新が発生すれば負のサイクルが存在することを検出できます。"},
+  {id:"2-44",sec:"2-2 アルゴリズム",term:"文字列照合",
+   statement:"文字列照合（文字列検索）はテキスト内に特定のパターン（文字列）が含まれるかを調べる手法で、単純照合のほかKMP法やボイヤームーア法などの高速アルゴリズムがある。",
+   answer:true,
+   explanation:"その通りです。文字列照合はテキストエディタの検索・ウイルス検出・DNAシーケンス解析などで使われます。単純照合はO(n×m)ですが、KMP法やボイヤームーア法はO(n)に近い高速な照合が可能です。"},
+  {id:"2-45",sec:"2-2 アルゴリズム",term:"形態素解析",
+   statement:"形態素解析は文章を意味を持つ最小単位（形態素）に分割し各形態素の品詞や活用形を識別する自然言語処理技術で、検索エンジン・機械翻訳・テキストマイニングなどで使われる。",
+   answer:true,
+   explanation:"その通りです。形態素解析は日本語NLPの基盤技術です。「猫が寝ている」を「猫/が/寝て/いる」と形態素に分割し、品詞（名詞・助詞・動詞など）を識別します。MeCab・Janomeなどのツールが日本語形態素解析に使われます。"},
+  {id:"2-46",sec:"2-2 アルゴリズム",term:"構文解析",
+   statement:"構文解析はプログラムや文の文法構造を解析して構文木（パースツリー）を生成するプロセスで、コンパイラやインタプリタの字句解析の後に行われる処理である。",
+   answer:true,
+   explanation:"その通りです。コンパイラは字句解析（トークン化）→構文解析（文法確認・構文木生成）→意味解析→コード生成の順に処理します。構文解析はソースコードが文法規則に従っているかを検証します。"},
+  {id:"2-47",sec:"2-2 アルゴリズム",term:"分割統治法",
+   statement:"分割統治法は大きな問題を小さな部分問題に分割してそれぞれを独立に解決し結果を組み合わせる設計パターンで、マージソート・クイックソート・2分探索などに応用されている。",
+   answer:true,
+   explanation:"その通りです。分割統治法（Divide and Conquer）は「分割→統治→組み合わせ」の3ステップで問題を解きます。マージソート・クイックソート・高速フーリエ変換（FFT）・行列の積の高速計算などに使われます。"},
+  {id:"2-48",sec:"2-2 アルゴリズム",term:"意味解析",
+   statement:"意味解析はプログラムや自然言語テキストの意味的な正しさを検証するプロセスで、コンパイラでは型チェックや変数の宣言確認などを行う。",
+   answer:true,
+   explanation:"その通りです。コンパイラの意味解析では型の整合性チェック・未定義変数の参照検出・スコープ解析などを行います。自然言語処理では文の意味や意図を理解する処理を指します。"},
+  {id:"2-49",sec:"2-2 アルゴリズム",term:"n-gram",
+   statement:"n-gramはテキストをn個の連続した単語または文字の組み合わせに分割したものであり、自然言語処理の言語モデル作成やスパムフィルタリングなどに利用される。",
+   answer:true,
+   explanation:"その通りです。n-gramは言語の確率的モデル化に使われます。bigram（2-gram）は「私は」「は猫」のような2語の連続、trigramは3語の連続です。テキスト分類・言語識別・タイプミス検出などに使われます。"},
+  {id:"2-50",sec:"2-2 アルゴリズム",term:"再帰性",
+   statement:"プログラミングにおける再帰性（再帰）とは関数が実行中に自分自身を呼び出す特性であり、終了条件（ベースケース）が必須で、適切に設計しないとスタックオーバーフローを引き起こす。",
+   answer:true,
+   explanation:"その通りです。再帰関数は自己呼び出しのたびにスタックにフレームが積まれます。終了条件（ベースケース）なしに再帰を続けるとスタックが溢れます。ハノイの塔・フィボナッチ数列・ツリー走査などに活用されます。"},
+  {id:"2-51",sec:"2-2 アルゴリズム",term:"係り受け解析",
+   statement:"係り受け解析は文中の単語間の文法的な依存関係（どの語がどの語に係るか）を解析する自然言語処理の手法で、機械翻訳・情報抽出・質問応答システムなどに活用される。",
+   answer:true,
+   explanation:"その通りです。係り受け解析（依存構造解析）は「犬が公園で遊ぶ」で「遊ぶ」が述語で「犬が」が主語、「公園で」が場所を表す補語という関係を解析します。依存パーサーとも呼ばれます。"},
+  {id:"2-52",sec:"2-2 アルゴリズム",term:"文章間類似度",
+   statement:"文章間類似度は2つの文章の類似性を数値で表す指標で、コサイン類似度やJaccard係数などで計測され、検索エンジンの関連度スコアリングや重複文書の検出などに使われる。",
+   answer:true,
+   explanation:"その通りです。文章間類似度はNLPの重要な指標です。コサイン類似度はTF-IDFベクトルなどの類似度計算に、Jaccard係数は集合の類似度計算に使われます。類似文書検索・盗作検出・質問応答などに応用されます。"},
+  {id:"2-53",sec:"2-2 アルゴリズム",term:"文脈解析",
+   statement:"文脈解析はテキストの意味を周囲の文脈情報を考慮して解釈する手法であり、同じ単語でも文脈によって意味が変わる場合（多義語解消など）の処理に使われる。",
+   answer:true,
+   explanation:"その通りです。文脈解析は多義語解消（WSD：Word Sense Disambiguation）に重要です。例えば「橋」という言葉は文脈によって「川に架かる橋」と「歯の橋（補綴物）」など異なる意味になります。"},
+  {id:"2-54",sec:"2-2 アルゴリズム",term:"ダイクストラ法",
+   statement:"ダイクストラ法は出発点に近い頂点から順に最短距離を確定していく貪欲法のアルゴリズムであり、GPSナビゲーションシステムの経路計算などで活用されている。",
+   answer:true,
+   explanation:"その通りです。ダイクストラ法は優先度キューを使い、最短距離が確定した頂点から隣接頂点の距離を更新する貪欲法です。Googleマップなどのナビゲーションやネットワークのルーティングプロトコルに使われます。"},
+  {id:"2-55",sec:"2-2 アルゴリズム",term:"幅優先探索",
+   statement:"幅優先探索（BFS）は重みなしグラフでの最短経路（最小ホップ数）探索に使用でき、ソーシャルネットワークの最短つながり探索やWebクローラーのページ収集にも応用される。",
+   answer:true,
+   explanation:"その通りです。BFSはすべての辺の重みが等しい（または重みなし）グラフで最短経路を保証します。「6次の隔たり」問題のようなSNS分析・Webクロール・ゲームの最短移動経路計算などで使われます。"},
+
+  // ── 2-3 プログラミング ──
+  {id:"2-56",sec:"2-3 プログラミング",term:"プログラミング",
+   statement:"プログラミングとはコンピュータに特定の動作をさせるための指示をプログラミング言語で記述することであり、問題解決の手順（アルゴリズム）をコードとして表現する作業である。",
+   answer:true,
+   explanation:"その通りです。プログラミングはアルゴリズムをコンピュータが理解できる形式（プログラミング言語）で記述する作業です。プログラミング作法（コーディング標準）に従うことで保守性・可読性の高いコードを書けます。"},
+  {id:"2-57",sec:"2-3 プログラミング",term:"コーディング標準",
+   statement:"コーディング標準（コーディング規約）はプログラムを書く際の統一ルールであり、命名規則・インデント・コメントの書き方などを定めることでチーム全体のコードの可読性と保守性を向上させる。",
+   answer:true,
+   explanation:"その通りです。コーディング標準（コーディング規約）はチームでの協働開発を円滑にします。Google・Microsoft・Airbnbなどの企業が自社の規約を公開しています。"},
+  {id:"2-58",sec:"2-3 プログラミング",term:"字下げ",
+   statement:"字下げ（インデント）はコードの各行の先頭を右にずらして階層構造を視覚的に示す技法で、Pythonではインデントが文法的に必須であるため、誤ったインデントはエラーになる。",
+   answer:true,
+   explanation:"その通りです。インデントはコードの読みやすさに直結します。特にPythonはインデントによってコードブロックを定義するため、インデントが崩れるとIndentationErrorになります。"},
+  {id:"2-59",sec:"2-3 プログラミング",term:"モジュール分割",
+   statement:"モジュール分割は大きなプログラムを機能単位の小さなモジュールに分割する設計手法で、各モジュールが独立性を持つことで可読性・テスト容易性・再利用性・保守性が向上する。",
+   answer:true,
+   explanation:"その通りです。モジュール分割は「関心の分離（Separation of Concerns）」の原則に基づきます。モジュールの独立性が高いほど変更の影響が局所化され、並行開発も容易になります。"},
+  {id:"2-60",sec:"2-3 プログラミング",term:"モジュール独立性",
+   statement:"モジュール独立性はモジュール間の結合度が低く（低結合）、各モジュールの内部的なまとまりが高い（高凝集）状態を指し、ソフトウェアの品質向上に直結する重要な設計指標である。",
+   answer:true,
+   explanation:"その通りです。良いモジュール設計の原則は「低結合・高凝集」です。低結合（他のモジュールへの依存が少ない）かつ高凝集（1つのモジュールが1つの責務に集中）であるほど保守しやすいコードになります。"},
+  {id:"2-61",sec:"2-3 プログラミング",term:"メインルーチン",
+   statement:"メインルーチンはプログラムの実行開始点であり、C言語では'main'関数がプログラムのエントリーポイントとして機能し、他のサブルーチンを呼び出してプログラム全体の処理を制御する。",
+   answer:true,
+   explanation:"その通りです。C言語ではmain関数がエントリーポイントです。Javaでは'public static void main(String[] args)'が、Pythonでは'if __name__ == \"__main__\":'ブロック内のコードがそれに相当します。"},
+  {id:"2-62",sec:"2-3 プログラミング",term:"サブルーチン",
+   statement:"サブルーチンは特定の処理をまとめた再利用可能なプログラムの部品であり、同じ処理を複数箇所で使う際にコードの重複を避けることができる。現代のプログラミングではプロシージャや関数と呼ばれることが多い。",
+   answer:true,
+   explanation:"その通りです。サブルーチン（手続き・関数）はコードの再利用・保守性向上・ロジックの分離に使われます。DRY原則（Don't Repeat Yourself：同じコードを繰り返さない）の実践に不可欠です。"},
+  {id:"2-63",sec:"2-3 プログラミング",term:"整数型",
+   statement:"整数型は小数点を持たない整数を格納するデータ型であり、プログラミング言語によって使用するビット数（8ビット・16ビット・32ビット・64ビットなど）が異なり、格納できる値の範囲も変わる。",
+   answer:true,
+   explanation:"その通りです。整数型のビット数によって表現できる範囲が変わります。例えば32ビット符号付き整数は-2,147,483,648〜2,147,483,647、64ビットはより大きな範囲を表せます。"},
+  {id:"2-64",sec:"2-3 プログラミング",term:"実数型",
+   statement:"実数型（浮動小数点型）は小数を含む数値を扱うデータ型で、浮動小数点数として実装されるため精度に限界があり、0.1+0.2が正確に0.3にならないような丸め誤差が生じることがある。",
+   answer:true,
+   explanation:"その通りです。浮動小数点数はIEEE 754規格で2進数で近似表現するため、10進数の0.1や0.3などは正確に表現できません。このため金融計算では整数型（銭単位など）での計算が推奨されることがあります。"},
+  {id:"2-65",sec:"2-3 プログラミング",term:"論理型",
+   statement:"論理型（ブール型）はtrueとfalseの2値だけを持つデータ型であり、条件分岐やフラグの設定などに使われる。",
+   answer:true,
+   explanation:"その通りです。論理型（Boolean型）はジョージ・ブールの名前に由来します。プログラムの条件判断（if文）やフラグ管理に必須のデータ型で、比較演算の結果として返される値でもあります。"},
+  {id:"2-66",sec:"2-3 プログラミング",term:"文字型",
+   statement:"文字型（Char型）は1文字を格納するデータ型であり、文字列型はその1文字を複数連結した可変長のデータ型である。",
+   answer:true,
+   explanation:"その通りです。C言語のcharは1バイトの文字型で、文字列はchar型の配列として表現します。Javaのcharは2バイトのUnicode文字を格納し、文字列はStringクラスで扱います。"},
+  {id:"2-67",sec:"2-3 プログラミング",term:"抽象データ型",
+   statement:"抽象データ型（ADT）はデータの具体的な実装方法を隠蔽し、データが持つべき操作のインターフェースのみを定義する概念であり、スタックやキューはADTの典型例である。",
+   answer:true,
+   explanation:"その通りです。抽象データ型（Abstract Data Type）は「何ができるか」のインターフェースを定義し「どう実装するか」を隠蔽します。スタックは「push・pop・peek」という操作を持つADTで、配列やリンクリストで実装できます。"},
+  {id:"2-68",sec:"2-3 プログラミング",term:"代入",
+   statement:"代入は変数に値を記憶させる操作であり、数学の等号と異なりプログラミングでは「x = x + 1」のような自己参照の代入が可能で、xの現在の値に1を加えた結果を再びxに格納する。",
+   answer:true,
+   explanation:"その通りです。プログラミングの代入（=）は数学の等式（=）とは異なり「右辺を評価して左辺に格納する」操作です。「x = x + 1」はxをインクリメントする一般的な代入です。"},
+  {id:"2-69",sec:"2-3 プログラミング",term:"選択処理",
+   statement:"選択処理（条件分岐）はプログラムにおいて条件に応じて異なる処理を実行する制御構造で、if文・else if文・switch文などで実装される。",
+   answer:true,
+   explanation:"その通りです。選択処理はプログラムの流れを条件によって分岐させます。if-else構文は2択、else-ifは多択、switch-caseは値による多択に使われます。プログラミングの基本制御構造の一つです。"},
+  {id:"2-70",sec:"2-3 プログラミング",term:"繰返し処理",
+   statement:"繰返し処理（ループ）はプログラムで同じ処理を条件が満たされる間繰り返す制御構造で、for文・while文・do-while文などで実装される。",
+   answer:true,
+   explanation:"その通りです。繰り返し処理はプログラミングの基本制御構造の一つです。for文は回数指定の繰り返し、while文は条件による繰り返し、do-while文は少なくとも1回は実行する繰り返しに使われます。"},
+  {id:"2-71",sec:"2-3 プログラミング",term:"引数",
+   statement:"引数（パラメータ）は関数やメソッドに渡す入力データであり、関数定義側の「仮引数（パラメータ）」と関数呼び出し側の「実引数（アーギュメント）」に区別される。",
+   answer:true,
+   explanation:"その通りです。関数定義に記述するのが仮引数（parameter）、実際に呼び出す際に渡す値が実引数（argument）です。引数を使うことで同じ関数を異なるデータで再利用できます。"},
+  {id:"2-72",sec:"2-3 プログラミング",term:"戻り値",
+   statement:"戻り値は関数が処理を実行した後に呼び出し元に返す結果であり、関数は複数の戻り値を返すことはできない。",
+   answer:false,
+   explanation:"多くの言語では複数の戻り値を返せます。Pythonではタプルで複数の値を返せ、Goも複数の戻り値をサポートします。C言語のように単一の戻り値のみをサポートする言語もありますが、「複数の戻り値を返せない」は一般的には正しくありません。",
+   wrongPoint:"「関数は複数の戻り値を返すことはできない」が誤りです。PythonやGoなど複数の戻り値を返せる言語があります。"},
+  {id:"2-73",sec:"2-3 プログラミング",term:"局所変数",
+   statement:"局所変数（ローカル変数）は特定の関数やブロック内でのみ有効なスコープを持つ変数で、そのスコープを外れると参照できなくなり、同名の変数が異なるスコープに存在してもそれぞれ独立している。",
+   answer:true,
+   explanation:"その通りです。局所変数はスコープ（有効範囲）が限定されることで意図しない値の変更を防ぎます。関数終了後にメモリが解放され、別の関数に同名の局所変数があっても互いに影響しません。"},
+  {id:"2-74",sec:"2-3 プログラミング",term:"オブジェクト指向プログラミング",
+   statement:"オブジェクト指向プログラミング（OOP）はデータとメソッドを「オブジェクト」にまとめ、カプセル化・継承・ポリモーフィズムの3原則を持つプログラミングパラダイムである。",
+   answer:true,
+   explanation:"その通りです。OOPの3大原則はカプセル化（データとメソッドの隠蔽）・継承（親クラスの機能を子クラスが受け継ぐ）・ポリモーフィズム（同じ操作が異なる型で異なる動作をする）です。Java・C++・Python・Rubyなどがオブジェクト指向言語です。"},
+  {id:"2-75",sec:"2-3 プログラミング",term:"コンストラクタ",
+   statement:"コンストラクタはオブジェクトが生成される際に自動的に呼び出される特別なメソッドで、オブジェクトの初期化処理を行う。戻り値を持たないという特徴がある。",
+   answer:true,
+   explanation:"その通りです。コンストラクタはnewキーワードでオブジェクト生成時に自動呼び出されます。クラス名と同名でvoidではなく戻り値なしというのが特徴です。メンバ変数の初期値設定などを行います。"},
+  {id:"2-76",sec:"2-3 プログラミング",term:"オーバーライド",
+   statement:"オーバーライドは親クラスで定義されたメソッドを子クラスで同じシグネチャで再定義することであり、ポリモーフィズムを実現するための重要な機能である。",
+   answer:true,
+   explanation:"その通りです。オーバーライドは継承とポリモーフィズムの核心です。「動物.鳴く()」を呼んだとき、犬オブジェクトなら「ワンワン」、猫オブジェクトなら「ニャー」と異なる動作ができます。"},
+  {id:"2-77",sec:"2-3 プログラミング",term:"オーバーロード",
+   statement:"オーバーロードは同じ名前のメソッドを引数の型や個数を変えて複数定義することで、コンパイル時に引数に応じて適切なメソッドが選択される。オーバーライドとは異なる概念である。",
+   answer:true,
+   explanation:"その通りです。オーバーロードは「同名・異なる引数」のメソッドを複数定義することです。add(int,int)・add(double,double)・add(String,String)など異なる型に対して統一した名前で操作できます。オーバーライドの「同名・同引数で再定義」とは区別が必要です。"},
+  {id:"2-78",sec:"2-3 プログラミング",term:"Ajax",
+   statement:"Ajaxは非同期でサーバーと通信してページ全体を再読み込みせずに一部のコンテンツだけを更新できるWeb技術であり、検索候補のリアルタイム表示やSNSのフィード更新などに使われる。",
+   answer:true,
+   explanation:"その通りです。Ajaxはページ全体の再描画（ページリロード）なしにサーバーとデータをやり取りします。Googleマップの地図スクロール・Twitterのタイムライン更新・フォームの入力チェックなどUX向上に貢献します。"},
+  {id:"2-79",sec:"2-3 プログラミング",term:"ビット演算",
+   statement:"ビット演算はデータを2進数のビット単位で操作する演算であり、AND・OR・XOR・NOT・シフト演算などがある。マスク処理・フラグ管理・暗号化などで活用される。",
+   answer:true,
+   explanation:"その通りです。ビット演算はCPUが直接高速に処理できる低レベルな演算です。特定ビットの設定（OR）・クリア（AND NOT）・反転（XOR）・確認（AND）などに使われます。"},
+  {id:"2-80",sec:"2-3 プログラミング",term:"メンバ変数",
+   statement:"メンバ変数はクラスに属する変数（フィールド）で、そのクラスから生成された各インスタンスが独自の値を持つ。カプセル化原則によりprivateにして外部からのアクセスを制限することが多い。",
+   answer:true,
+   explanation:"その通りです。メンバ変数（インスタンス変数）はオブジェクトごとに独立した値を持ちます。カプセル化のためにprivateにし、外部からはgetter/setterメソッド経由でアクセスするのがオブジェクト指向の基本です。"},
+  {id:"2-81",sec:"2-3 プログラミング",term:"Webプログラミング",
+   statement:"Webプログラミングはフロントエンド（HTML・CSS・JavaScriptなどでブラウザ上の表示・操作を担当）とバックエンド（サーバー上でDB連携やロジック処理を担当）に分かれる。",
+   answer:true,
+   explanation:"その通りです。フロントエンドはユーザーが直接見て操作する部分（UI/UX）を担当し、バックエンドはデータ処理・ビジネスロジック・データベース連携などサーバー側の処理を担当します。"},
+  {id:"2-82",sec:"2-3 プログラミング",term:"リッチクライアント",
+   statement:"リッチクライアントはサーバーへの頻繁なアクセスなしにブラウザ上でデスクトップアプリに近い豊富な操作性を提供するWebアプリのことで、SPAやAjaxを活用することで実現される。",
+   answer:true,
+   explanation:"その通りです。従来のWebアプリはページ遷移ごとにサーバーに全ページを要求しましたが、リッチクライアントはAjaxやSPA（シングルページアプリケーション）技術でページ再読み込みなしに操作できます。"},
+  {id:"2-83",sec:"2-3 プログラミング",term:"フロントエンドフレームワーク",
+   statement:"フロントエンドフレームワークはWebアプリのUI開発を効率化するためのフレームワークであり、React・Vue.js・Angularが代表的で、コンポーネントベースの開発が特徴である。",
+   answer:true,
+   explanation:"その通りです。Reactはデータ駆動のUIコンポーネントライブラリ（Meta製）、Vue.jsはプログレッシブフレームワーク、AngularはTypeScriptベースのフルフレームワーク（Google製）です。"},
+  {id:"2-84",sec:"2-3 プログラミング",term:"サーバサイドプログラミング",
+   statement:"サーバサイドプログラミングはWebサーバー上で実行されるプログラムの開発を指し、PHP・Python・Java・Rubyなどが使われ、ユーザー認証・データベース操作・ビジネスロジック処理などを担う。",
+   answer:true,
+   explanation:"その通りです。サーバサイドはクライアントからのHTTPリクエストを受け付け処理してレスポンスを返します。セキュリティ上重要な処理（認証・決済・DB操作）はサーバサイドで行うのが原則です。"},
+  {id:"2-85",sec:"2-3 プログラミング",term:"構造型",
+   statement:"構造型（構造体）は異なる型の複数のデータを一つにまとめるデータ構造であり、C言語のstructやPythonのdataclassがその例である。",
+   answer:true,
+   explanation:"その通りです。構造型は「名前・年齢・住所」といった異なる型のデータを1つの型としてまとめます。C言語のstruct・Pythonのdataclass・Swiftのstructなどが代表例です。"},
+  {id:"2-86",sec:"2-3 プログラミング",term:"算術演算",
+   statement:"算術演算は数値に対する四則演算（加算・減算・乗算・除算）を行う演算であり、プログラミングでは剰余演算（余り計算）やべき乗演算も算術演算に含まれることが多い。",
+   answer:true,
+   explanation:"その通りです。算術演算子には加算(+)・減算(-)・乗算(*)・除算(/)・剰余(%)・べき乗(**)などがあります。剰余演算（%）は偶奇判定・循環処理などで頻繁に使われます。"},
+  {id:"2-87",sec:"2-3 プログラミング",term:"比較演算",
+   statement:"比較演算は2つの値を比較してtrue/falseを返す演算で、==（等しい）・!=（等しくない）・>・<・>=・<=などの演算子が使われ、プログラムの条件分岐に活用される。",
+   answer:true,
+   explanation:"その通りです。比較演算子の結果は真偽値（true/false）で、if文などの条件式に使われます。注意点としてPythonの==は値の等値比較、isは同一オブジェクト判定と区別されます。"},
+  {id:"2-88",sec:"2-3 プログラミング",term:"論理演算",
+   statement:"論理演算はtrue/false値に対するAND・OR・NOTなどの演算で、複数の条件を組み合わせたり条件を反転させたりする際に使われ、プログラムの条件制御の基礎となる。",
+   answer:true,
+   explanation:"その通りです。論理演算はプログラミングの条件制御の根幹です。AND（&&）は両方の条件が真、OR（||）はどちらかが真、NOT（!）は条件を反転させます。"},
+  {id:"2-89",sec:"2-3 プログラミング",term:"命名規則",
+   statement:"命名規則には単語をアンダースコアで繋ぐスネークケース（snake_case）や各単語の先頭を大文字にするキャメルケース（camelCase）があり、言語やチームによって採用するスタイルが異なる。",
+   answer:true,
+   explanation:"その通りです。PythonはPEP8でスネークケース（変数・関数）とアッパーキャメルケース（クラス）を推奨、Javaはキャメルケース（変数・メソッド）とパスカルケース（クラス）が一般的です。"},
+  {id:"2-90",sec:"2-3 プログラミング",term:"ネストの深さ",
+   statement:"ネストの深さはコードの入れ子構造の階層を示す指標で、深くなるほどコードが複雑になり可読性・保守性が低下するため、深いネストは早期リターンやガード節などのリファクタリングで解消することが推奨される。",
+   answer:true,
+   explanation:"その通りです。ネストが深い（if・forが何重にも入れ子になった）コードは「矢印コード」と呼ばれ理解しにくいです。早期return・ガード節・関数抽出などでネストを浅くすることが可読性向上につながります。"},
+  {id:"2-91",sec:"2-3 プログラミング",term:"Apache",
+   statement:"ApacheはオープンソースのWebサーバーソフトウェアで、WindowsやLinuxなど多くのOSで動作し、モジュールによる機能拡張が可能な世界で広く使われているWebサーバーの一つである。",
+   answer:true,
+   explanation:"その通りです。Apache HTTP ServerはNginxと並んで世界で最も使われているWebサーバーです。.htaccessによる柔軟な設定・豊富なモジュール・大きなコミュニティが特徴で、個人サイトから企業サイトまで幅広く使われます。"},
+  {id:"2-92",sec:"2-3 プログラミング",term:"文字列型",
+   statement:"文字列型（String型）は文字の列を格納するデータ型で、多くの言語でimmutable（変更不可）として実装されており、文字列を変更する際は新しい文字列オブジェクトが生成される。",
+   answer:true,
+   explanation:"その通りです。Java・Python・C#などでStringはimmutable（不変）です。str = str + \"a\"のような操作は元の文字列を変更するのではなく新しいStringオブジェクトを生成します。"},
+  {id:"2-93",sec:"2-3 プログラミング",term:"プログラムの機能適合性・性能効率性・使用性・保守性の向上",
+   statement:"ソフトウェアの品質特性として機能適合性（要求機能を正確に実装）・性能効率性（リソースを効率よく利用）・使用性（ユーザーが使いやすい）・保守性（変更・修正が容易）の向上は重要な設計目標である。",
+   answer:true,
+   explanation:"その通りです。ISO/IEC 25010ではソフトウェア品質特性として機能適合性・性能効率性・互換性・使用性・信頼性・セキュリティ・保守性・移植性の8特性が定義されています。"},
+  {id:"2-94",sec:"2-3 プログラミング",term:"使用禁止命令",
+   statement:"使用禁止命令は特定の操作やコマンドへのアクセスを制限するために設定され、セキュリティや操作ミス防止のためにシステム設計に組み込まれる。",
+   answer:true,
+   explanation:"その通りです。使用禁止命令（禁止ディレクティブ）はシステムのセキュリティ強化に使われます。例えばWebサーバーの設定でディレクトリリスティングを禁止したり、特定のファイルへのアクセスを拒否したりします。"},
+
+  // ── 2-4 プログラム言語 ──
+  {id:"2-95",sec:"2-4 プログラム言語",term:"手続型言語",
+   statement:"手続型言語はプログラムの処理手順を順序通りに記述する言語パラダイムであり、C言語・Pascal・COBOLなどが代表例である。",
+   answer:true,
+   explanation:"その通りです。手続型言語はアルゴリズムを手続き（プロシージャ・関数）の組み合わせで表現します。C言語はシステムプログラミング・COBOLは事務処理・Pascalは教育用途で代表的な手続型言語です。"},
+  {id:"2-96",sec:"2-4 プログラム言語",term:"オブジェクト指向言語",
+   statement:"オブジェクト指向言語はオブジェクトを中心にプログラムを構築する言語パラダイムで、Java・C++・Pythonなどが代表例であり、再利用性・保守性・拡張性の高いプログラム開発に適している。",
+   answer:true,
+   explanation:"その通りです。オブジェクト指向言語はカプセル化・継承・ポリモーフィズムを言語機能として提供します。Java・C++・C#・Python・Rubyなどが代表例で、現代のソフトウェア開発で広く採用されています。"},
+  {id:"2-97",sec:"2-4 プログラム言語",term:"スクリプト言語",
+   statement:"スクリプト言語はコンパイルなしにインタプリタで逐次実行できる言語の総称で、Python・Ruby・PHPなどが代表例であり、開発の生産性が高く初心者にも習得しやすい特徴がある。",
+   answer:true,
+   explanation:"その通りです。スクリプト言語はソースコードをその場で実行できるため開発サイクルが速いです。Webアプリ開発・システム管理自動化・データ分析など多様な用途に使われます。"},
+  {id:"2-98",sec:"2-4 プログラム言語",term:"Fortran",
+   statement:"FortranはIBMが1957年に開発した世界最初の高水準プログラミング言語の一つで、科学技術・数値計算に特化しており、現在もスーパーコンピュータを使った科学計算に使われている。",
+   answer:true,
+   explanation:"その通りです。Fortran（FORmula TRANslation）は最初の高水準言語の一つで、60年以上の歴史を持ちます。数値演算の処理速度が高く、気候シミュレーション・量子力学計算など科学計算の現場で今も現役です。"},
+  {id:"2-99",sec:"2-4 プログラム言語",term:"COBOL",
+   statement:"COBOLは英語に近い文法を持つ事務処理向けプログラミング言語で、現在は時代遅れとなっており銀行や保険会社の基幹システムで使われることはほぼなくなっている。",
+   answer:false,
+   explanation:"COBOLは現在も銀行・保険・政府など多くの基幹システムで現役で使われています。世界中のCOBOLコードは約2,000億行存在すると言われ、金融業界を中心に莫大な量のCOBOLプログラムが稼働しています。",
+   wrongPoint:"「銀行や保険会社の基幹システムで使われることはほぼなくなっている」が誤りです。COBOLは現在も金融機関の基幹システムで広く使われています。"},
+  {id:"2-100",sec:"2-4 プログラム言語",term:"C",
+   statement:"C言語は1972年にベル研究所で開発された汎用プログラミング言語で、低レベルのメモリ操作が可能で移植性が高く、UnixやLinuxのカーネルはC言語で書かれている。",
+   answer:true,
+   explanation:"その通りです。C言語はOSやシステムソフトウェアの開発に使われるとともに、Java・Python・C++など多くの後継言語に影響を与えました。「プログラミングの母語」とも呼ばれる重要な言語です。"},
+  {id:"2-101",sec:"2-4 プログラム言語",term:"Java",
+   statement:"Javaは「一度書けばどこでも動く（Write Once, Run Anywhere）」を理念とし、JVM（Java仮想マシン）上で動作するバイトコードにコンパイルされることでプラットフォーム非依存を実現している。",
+   answer:true,
+   explanation:"その通りです。JavaはソースコードをJVMが解釈実行できるバイトコードにコンパイルします。JVMが動作する環境であれば同じバイトコードがWindowsでもLinuxでも動きます。Androidアプリ開発にも広く使われます。"},
+  {id:"2-102",sec:"2-4 プログラム言語",term:"Python",
+   statement:"Pythonはインデントによるブロック構造と読みやすい文法が特徴の高水準言語で、機械学習・データサイエンス・Webアプリ開発・自動化スクリプトなど幅広い用途で現在最も人気のある言語の一つである。",
+   answer:true,
+   explanation:"その通りです。Pythonは「書きやすく読みやすい」設計哲学のもと、NumPy・TensorFlow・Pandasなどの強力なライブラリが充実しており、AI・機械学習分野の標準言語として急速に普及しています。"},
+  {id:"2-103",sec:"2-4 プログラム言語",term:"C++",
+   statement:"C++はC言語にオブジェクト指向機能（クラス・継承・ポリモーフィズム）を追加した言語で、C言語の高い実行性能を保ちながらオブジェクト指向でプログラムを設計できる。",
+   answer:true,
+   explanation:"その通りです。C++はC言語との高い後方互換性を持ちながらOOPをサポートします。ゲームエンジン（Unreal Engine）・組み込みシステム・ハイパフォーマンスコンピューティングなど処理速度が重要な場面で広く使われます。"},
+  {id:"2-104",sec:"2-4 プログラム言語",term:"Go",
+   statement:"GoはGoogleが開発したプログラミング言語で、シンプルな構文・高速なコンパイル・並行処理の組み込みサポートが特徴であり、Docker・KubernetesなどのクラウドネイティブツールがGo言語で書かれている。",
+   answer:true,
+   explanation:"その通りです。GoはgoroutineとChannelによる並行処理の記述が容易で、Webバックエンド・クラウドサービス・CLIツールの開発に使われます。"},
+  {id:"2-105",sec:"2-4 プログラム言語",term:"ECMAScript",
+   statement:"ECMAScriptはJavaScriptの標準仕様であり、ECMA Internationalが標準化している。ECMAScript 2015（ES6）以降、クラス構文・アロー関数・Promiseなどが追加された。",
+   answer:true,
+   explanation:"その通りです。JavaScriptはECMAScript仕様の実装です。ES6（2015年）は大規模な改定でクラス・モジュール・let/const・アロー関数・Promise・テンプレートリテラルなど多くの現代的機能が追加されました。"},
+  {id:"2-106",sec:"2-4 プログラム言語",term:"PHP",
+   statement:"PHPはWebアプリケーション開発に特化したサーバーサイドスクリプト言語で、HTMLに埋め込む形でコードを記述でき、WordPressなど多くのCMSがPHPで構築されている。",
+   answer:true,
+   explanation:"その通りです。PHPはWebサーバー上で実行されてHTMLを動的に生成します。世界のWebサイトの約80%がPHPを使用していると言われ、WordPress・Drupal・LaravelなどがPHPの代表的なプロジェクトです。"},
+  {id:"2-107",sec:"2-4 プログラム言語",term:"Ruby",
+   statement:"Rubyはまつもとゆきひろ氏が開発した日本発のオブジェクト指向スクリプト言語で、WebフレームワークのRuby on Railsが有名であり「プログラマの幸福を最大化する」という設計理念を持つ。",
+   answer:true,
+   explanation:"その通りです。Ruby on Rails（RoR）は「設定より規約（Convention over Configuration）」を採用した高生産性Webフレームワークで、GitHub・Shopifyなどが初期にRailsで構築されました。"},
+  {id:"2-108",sec:"2-4 プログラム言語",term:"R",
+   statement:"Rは統計解析とデータ可視化に特化したプログラミング言語・環境で、豊富な統計ライブラリと美しいグラフ作成機能を持ち、データサイエンス・生物統計・経済学などで広く使われている。",
+   answer:true,
+   explanation:"その通りです。RはCRANリポジトリに20,000以上のパッケージがあり、ggplot2（可視化）・dplyr（データ操作）・tidyverse（データ分析環境）などが有名です。学術研究でのデータ分析に特に強力な言語です。"},
+  {id:"2-109",sec:"2-4 プログラム言語",term:"Julia",
+   statement:"JuliaはPythonのような使いやすさとC言語に近い実行速度を両立させた科学技術計算向けプログラミング言語であり、JITコンパイルによる高速実行が特徴である。",
+   answer:true,
+   explanation:"その通りです。Juliaは「2言語問題」（プロトタイプはPython、高速化はC/Fortranで書き直す問題）を解決するために設計されました。数値計算・機械学習・金融工学などで注目されています。"},
+  {id:"2-110",sec:"2-4 プログラム言語",term:"Perl",
+   statement:"Perlはテキスト処理と正規表現の強力なサポートで知られるスクリプト言語で、CGIスクリプトやシステム管理の自動化に広く使われた。現在はPythonやRubyに置き換えられることが多い。",
+   answer:true,
+   explanation:"その通りです。Perlはテキスト処理の巨人とも呼ばれ、強力な正規表現と豊富なCPANライブラリが特徴です。Web普及初期に多くのWebアプリがPerlで書かれましたが、現在はPythonやRubyが多くの用途で置き換えています。"},
+  {id:"2-111",sec:"2-4 プログラム言語",term:"Pascal",
+   statement:"Pascalは構造化プログラミングを強く体現した教育目的の言語で、現在は商用開発での使用は少ないがDelphiとして発展し影響を与え続けている。",
+   answer:true,
+   explanation:"その通りです。Pascalはニクラウス・ヴィルト氏がプログラミング教育のために設計した言語で、厳格な型システムと構造化を特徴とします。ObjectPascalを経てDelphiに発展し、Windows向けアプリ開発に使われました。"},
+  {id:"2-112",sec:"2-4 プログラム言語",term:"BASIC",
+   statement:"BASICは1964年に開発された初心者向けプログラミング言語で、マイコン時代に多くのパソコンに標準搭載されプログラミング教育に貢献した。現在はVisual Basicなどに発展している。",
+   answer:true,
+   explanation:"その通りです。BASICは「Beginner's All-purpose Symbolic Instruction Code」の略で、シンプルな構文で対話的にプログラムを実行できます。Microsoft Visual Basic（VB）やVBA（Excel等のマクロ言語）として現在も使われています。"},
+  {id:"2-113",sec:"2-4 プログラム言語",term:"共通言語基盤",
+   statement:"共通言語基盤（CLI）はマイクロソフトが策定したプログラム言語・プラットフォーム非依存の実行環境仕様であり、.NET FrameworkはそのCLI実装の代表であり、C#やVB.NETが動作する基盤となっている。",
+   answer:true,
+   explanation:"その通りです。CLI（Common Language Infrastructure）はECMAおよびISOで国際標準化されています。.NET Frameworkはその実装で、共通中間言語（CIL）で複数言語間の相互運用を可能にします。"},
+
+  // ── 2-5 その他の言語 ──
+  {id:"2-114",sec:"2-5 その他の言語",term:"マークアップ言語",
+   statement:"マークアップ言語はテキストにタグを付加して文書の構造・意味・書式を表現するための言語であり、HTMLやXMLが代表例である。",
+   answer:true,
+   explanation:"その通りです。マークアップ言語はコンテンツと構造・見た目の定義を分離します。HTMLはWebページの構造記述・XMLは汎用データ記述・Markdownはシンプルなテキスト記述に使われます。"},
+  {id:"2-115",sec:"2-5 その他の言語",term:"HTML",
+   statement:"HTMLはWebページの構造を記述するマークアップ言語で、最新のHTML5では音声・動画の埋め込みやCanvas要素による描画など豊富な機能が追加されており、CSSとJavaScriptと組み合わせてWebサイトが構築される。",
+   answer:true,
+   explanation:"その通りです。HTML（HyperText Markup Language）はWebの基礎技術です。HTML5でaudio・video・canvas・WebStorageなどが追加され、プラグインなしにリッチなコンテンツを表現できるようになりました。"},
+  {id:"2-116",sec:"2-5 その他の言語",term:"XML",
+   statement:"XMLはユーザーが独自のタグを定義できる拡張可能なマークアップ言語で、データの保存・異なるシステム間でのデータ交換に広く使われ、HTMLはXMLの一種である。",
+   answer:false,
+   explanation:"HTMLはXMLの一種ではありません。HTMLとXMLはどちらもSGMLから派生していますが、HTMLはXMLベースではありません（XHTMLはXMLベースのHTMLですが）。HTMLとXMLは兄弟関係で、XMLが親（SGML由来）です。",
+   wrongPoint:"「HTMLはXMLの一種である」が誤りです。HTMLとXMLはSGMLから独立して派生した兄弟関係であり、XHTMLがXMLベースのHTMLです。"},
+  {id:"2-117",sec:"2-5 その他の言語",term:"DOM",
+   statement:"DOMはHTMLやXML文書をプログラムから操作するためのAPIで、文書をツリー構造のオブジェクトとして表現しJavaScriptからノードの追加・削除・変更などの操作を可能にする。",
+   answer:true,
+   explanation:"その通りです。DOMはブラウザがHTMLをパースして作成するオブジェクトツリーです。JavaScriptはdocument.getElementByIdなどのDOMAPIを使ってページを動的に変更します。"},
+  {id:"2-118",sec:"2-5 その他の言語",term:"CSS",
+   statement:"CSSはHTMLの要素をどのように表示・装飾するかを定義するスタイルシート言語で、文書の構造（HTML）とデザイン（CSS）を分離し、CSS3ではFlexboxやGrid・アニメーションなどの高度な機能が追加された。",
+   answer:true,
+   explanation:"その通りです。CSSはセレクタで対象要素を指定しプロパティで見た目を定義します。CSS3のFlexboxとGrid Layoutは複雑なレイアウトを容易に実現でき、メディアクエリによるレスポンシブデザインにも不可欠です。"},
+  {id:"2-119",sec:"2-5 その他の言語",term:"JSON",
+   statement:"JSONはキーと値のペア（オブジェクト）と値の配列を表現できる軽量なデータ交換フォーマットで、人間にも機械にも読みやすく、WebAPIのレスポンス形式として事実上の標準となっている。",
+   answer:true,
+   explanation:"その通りです。JSON（JavaScript Object Notation）はXMLより簡潔でパースが速く、RESTful APIのレスポンス形式として非常に広く使われています。JavaScriptのオブジェクトリテラル記法をベースにしています。"},
+  {id:"2-120",sec:"2-5 その他の言語",term:"YAML",
+   statement:"YAMLはインデントを用いた階層構造の表現が特徴のデータシリアライズ言語で、JSONより人間にとって読みやすく、DockerやKubernetesの設定ファイルに広く使われている。",
+   answer:true,
+   explanation:"その通りです。YAMLはJSONのスーパーセット（JSONはYAMLの一部）で、コメントが書けること・クォートが少ないことなどで人間が書きやすい形式です。CI/CDツール（GitHub Actions・CircleCI）の設定ファイルでも広く使われます。"},
+  {id:"2-121",sec:"2-5 その他の言語",term:"SVG",
+   statement:"SVGはXMLベースのベクター形式グラフィック記述言語で、どのような解像度に拡大縮小しても品質が劣化せず、JavaScriptやCSSとの連携でアニメーションや動的なグラフィックスの作成も可能である。",
+   answer:true,
+   explanation:"その通りです。SVGはビットマップ（PNG・JPEGなど）とは異なりベクター形式なので拡大しても鮮明です。Webのアイコン・図表・インフォグラフィック・データ可視化（D3.jsなど）に広く使われます。"},
+  {id:"2-122",sec:"2-5 その他の言語",term:"SOAP",
+   statement:"SOAPはXMLベースのWebサービス間メッセージ交換プロトコルで、HTTP上で動作し企業間システム連携に使われてきたが、近年はよりシンプルなRESTful APIへの移行が進んでいる。",
+   answer:true,
+   explanation:"その通りです。SOAP（Simple Object Access Protocol）はXMLエンベロープ構造でメッセージを定義し、WSDLで仕様を記述します。厳格な型定義とセキュリティが必要な金融・医療などのエンタープライズ統合で使われますが、RESTに比べて複雑です。"},
+  {id:"2-123",sec:"2-5 その他の言語",term:"クラス図",
+   statement:"クラス図はUMLの図の一種でオブジェクト指向システムのクラスとその属性・操作・クラス間の関連・継承関係などを表現する図であり、システム設計において最も広く使われるUML図の一つである。",
+   answer:true,
+   explanation:"その通りです。クラス図はOOP設計のコミュニケーションツールです。クラス名・属性・操作（メソッド）・関連（Association）・継承（Generalization）・依存（Dependency）などをボックスと矢印で表現します。"},
+  {id:"2-124",sec:"2-5 その他の言語",term:"シーケンス図",
+   statement:"シーケンス図はUMLの図の一種でオブジェクト間のメッセージのやり取りを時系列で表現する図であり、Webアプリのブラウザ・サーバー・DBの処理順序の可視化などに広く使われる。",
+   answer:true,
+   explanation:"その通りです。シーケンス図は縦軸に時間、横軸にオブジェクトを取り、矢印でメッセージを表現します。API呼び出しの順序・システム間の連携フロー・ユースケースの具体的な動作記述などに使われます。"},
+  {id:"2-125",sec:"2-5 その他の言語",term:"アクティビティ図",
+   statement:"アクティビティ図はUMLの図の一種でフローチャートに似た形式で処理の流れ・分岐・並行処理を表現する図であり、ビジネスプロセスの流れやプログラムの制御フローを示すのに使われる。",
+   answer:true,
+   explanation:"その通りです。アクティビティ図はフローチャートを拡張したようなUML図で、アクション・分岐（ガード条件）・フォーク（並行処理の開始）・ジョイン（並行処理の合流）・スイムレーン（担当者別の処理）などを表現できます。"},
+  {id:"2-126",sec:"2-5 その他の言語",term:"ステートマシン図",
+   statement:"ステートマシン図（状態遷移図）はオブジェクトが取り得る状態とイベントによる状態遷移を表現するUML図であり、注文システムの「注文受付中→処理中→発送済み→完了」のような状態変化の表現に使われる。",
+   answer:true,
+   explanation:"その通りです。ステートマシン図はオブジェクトのライフサイクルを可視化します。ECサイトの注文状態・自動販売機の動作・通信プロトコルのセッション管理など、状態を持つシステムの設計に不可欠です。"},
+  {id:"2-127",sec:"2-5 その他の言語",term:"SGML",
+   statement:"SGMLはHTMLとXMLの基礎となったマークアップ言語の国際標準（ISO 8879）であり、HTMLはSGMLのサブセット、XMLはSGMLを簡素化して策定された言語である。",
+   answer:true,
+   explanation:"その通りです。SGMLはHTMLとXMLの「親」です。SGMLは複雑すぎてWebには向かなかったため、HTMLはSGMLの特定サブセットとして、XMLはSGMLを簡素化してWeb向けに設計されました。"},
+  {id:"2-128",sec:"2-5 その他の言語",term:"DTD",
+   statement:"DTDはHTMLやXMLの文書構造を定義する仕様書で、使用可能な要素・属性・出現順序や回数を規定し、文書のバリデーション（検証）に使われる。",
+   answer:true,
+   explanation:"その通りです。DTD（Document Type Definition）は「このXML文書ではこの要素が使えて、この属性が必須」などの構造ルールを定義します。近年はXML Schemaや Relax NGが代替として使われることが増えています。"},
+  {id:"2-129",sec:"2-5 その他の言語",term:"XML Schema",
+   statement:"XML SchemaはDTDの後継として開発されたXMLドキュメント構造の定義言語で、DTDより豊富なデータ型をサポートし、XML構文自体で記述できる点が特徴である。",
+   answer:true,
+   explanation:"その通りです。XML Schema（XSD）はDTDよりも豊富な型定義が可能で、文字列・整数・日付など多様なデータ型をサポートします。またXML形式で記述されるため既存のXMLツールで扱えます。"},
+  {id:"2-130",sec:"2-5 その他の言語",term:"CSS",
+   statement:"CSSのカスケードとは複数のスタイルシートが適用される際に特異性・継承・重要度などのルールに基づいて最終的に適用されるスタイルを決定する仕組みを指す。",
+   answer:true,
+   explanation:"その通りです。CSSのカスケード（Cascade）はCSSの「C」に由来します。同じ要素に複数のスタイルが定義された場合、特異性（Specificity）・順序・!importantなどのルールで最終スタイルが決定されます。"},
+  {id:"2-131",sec:"2-5 その他の言語",term:"SAX",
+   statement:"SAXはXMLをイベント駆動で逐次的に解析するAPIで、文書全体をメモリに読み込まないため大きなXMLファイルの処理に適しているが、文書全体への随時アクセスには向かない。",
+   answer:true,
+   explanation:"その通りです。SAX（Simple API for XML）はストリーム型の解析で、DOMがファイル全体をメモリ上のツリーとして読み込むのに対し、SAXは先頭から逐次読み込むためメモリ効率が高いです。"},
+  {id:"2-132",sec:"2-5 その他の言語",term:"オブジェクト図",
+   statement:"オブジェクト図はUMLの図の一種で、特定の時点におけるクラスのインスタンス（具体的な値を持つオブジェクト）とその関係を示す図であり、クラス図の理解を助ける具体的な例示に使われる。",
+   answer:true,
+   explanation:"その通りです。クラス図が抽象的な「クラスの設計図」を示すのに対し、オブジェクト図は実際の値を持つ「インスタンスのスナップショット」を示します。クラス図では理解しにくい関係を具体例で示すときに使います。"},
+  {id:"2-133",sec:"2-5 その他の言語",term:"コンポーネント図",
+   statement:"コンポーネント図はUMLの図の一種でシステムを構成するソフトウェアコンポーネント（モジュール・ライブラリ・サービスなど）とその依存関係を示す図であり、システムのアーキテクチャ全体像の把握に使われる。",
+   answer:true,
+   explanation:"その通りです。コンポーネント図は大規模システムの論理的な構成要素と依存関係を俯瞰できます。マイクロサービスアーキテクチャのサービス間依存関係の可視化などに活用されます。"},
+  {id:"2-134",sec:"2-5 その他の言語",term:"パッケージ図",
+   statement:"パッケージ図はUMLの図の一種でモデル要素をグループ化するパッケージとその依存関係を示す図で、大規模システムのクラスを名前空間ごとに整理・分類するのに使われる。",
+   answer:true,
+   explanation:"その通りです。パッケージ図は大規模なクラス群を整理・グループ化します。Javaのパッケージ構造のような名前空間の依存関係を示し、循環依存の検出やモジュール設計の検討に役立ちます。"},
+  {id:"2-135",sec:"2-5 その他の言語",term:"配置図",
+   statement:"配置図はUMLの図の一種でシステムの物理的な展開構成（サーバー・デバイス・通信経路・ソフトウェアコンポーネントの配備場所）を示す図であり、インフラ設計や運用管理に使われる。",
+   answer:true,
+   explanation:"その通りです。配置図はシステムのハードウェア構成・ネットワーク構成・どのサーバーにどのソフトウェアが配備されるかを表現します。クラウド構成図やサーバー構成の設計ドキュメントとして活用されます。"},
+  {id:"2-136",sec:"2-5 その他の言語",term:"コミュニケーション図",
+   statement:"コミュニケーション図はUMLの図の一種でオブジェクト間の相互作用を表現する点でシーケンス図と同じ情報を示すが、時系列よりオブジェクト間の構造的関係を重視した表現となっている。",
+   answer:true,
+   explanation:"その通りです。コミュニケーション図（旧コラボレーション図）はシーケンス図と同等の情報を別の観点で表現します。オブジェクト間のリンクと番号付きメッセージで相互作用を示します。"},
+  {id:"2-137",sec:"2-5 その他の言語",term:"タイミング図",
+   statement:"タイミング図はUMLの図の一種でオブジェクトの状態変化を時間軸上で表現する図であり、リアルタイムシステムや組み込みシステムでの複数オブジェクトのタイミング分析に使われる。",
+   answer:true,
+   explanation:"その通りです。タイミング図は状態の変化が時間的に重要なシステムの分析に使います。信号処理・リアルタイム組み込みシステム・ハードウェアの動作タイミングなどを分析・文書化するのに適しています。"},
+  {id:"2-138",sec:"2-5 その他の言語",term:"相互作用概要図",
+   statement:"相互作用概要図はUMLの図の一種で複数のインタラクション図を組み合わせた全体フローを表現する図であり、複雑なシナリオを全体的な流れとして把握しやすくするために利用される。",
+   answer:true,
+   explanation:"その通りです。相互作用概要図はアクティビティ図の構造を使いながら各ノードにシーケンス図などのインタラクション図を組み込む形式です。複数のシナリオが関わる複雑なシステムの全体像を示します。"},
+  {id:"2-139",sec:"2-5 その他の言語",term:"操作",
+   statement:"UMLクラス図における操作（Operation）はクラスが提供するメソッドのことで、操作名・引数・戻り値の型・アクセス修飾子（+public/-private/#protected）で記述される。",
+   answer:true,
+   explanation:"その通りです。UMLクラス図では「+メソッド名(引数:型):戻り値型」の形式で操作を記述します。+はpublic・-はprivate・#はprotectedを表すアクセス修飾子です。"},
+  {id:"2-140",sec:"2-5 その他の言語",term:"属性",
+   statement:"UMLクラス図における属性（Attribute）はクラスが保持するデータ（フィールド・メンバ変数）のことで、属性名・型・可視性・デフォルト値などで記述される。",
+   answer:true,
+   explanation:"その通りです。UMLクラス図では「±属性名:型 = デフォルト値」の形式で属性を記述します。HTMLのタグに付与する情報（src・alt・classなど）も「属性」と呼びますが、クラス図の属性はクラスが持つデータを指します。"},
+  {id:"2-141",sec:"2-5 その他の言語",term:"ロール名",
+   statement:"UMLクラス図における関連（Association）でロール名はその関連においてクラスが果たす役割を示す名前で、関連線の端に付記されることで関係の意味が明確になる。",
+   answer:true,
+   explanation:"その通りです。ロール名は関連の文脈でのクラスの役割を明示します。「会社」と「従業員」の関連で会社側を「雇用者（employer）」、従業員側を「被雇用者（employee）」と付けることで関係の意味が明確になります。"},
+  {id:"2-142",sec:"2-5 その他の言語",term:"XSL",
+   statement:"XSLはXMLドキュメントの変換（XSLT）・パス表現（XPath）・書式化（XSL-FO）から構成されるXMLのスタイル定義言語群で、XMLをHTMLや別のXML形式に変換するXSLTが特によく使われる。",
+   answer:true,
+   explanation:"その通りです。XSLファミリーのXSLT（Extensible Stylesheet Language Transformations）はXMLを別のXMLやHTMLに変換するための言語です。XPathはXMLドキュメント内の要素を指定するための構文で、XSLTやXQueryでも使われます。"},
+  {id:"2-143",sec:"2-5 その他の言語",term:"XHTML Basic",
+   statement:"XHTML BasicはモバイルデバイスなどリソースのP限られた環境向けに設計されたXHTMLのサブセットで、フレームやスクリプトなど負荷の高い機能を省いた軽量版である。",
+   answer:true,
+   explanation:"その通りです。XHTML Basicは携帯電話などのリソースが限られたデバイス向けに最小限のXHTML要素・属性セットを定義したW3C仕様です。HTML5の登場により現在は使用が減少しています。"},
+  {id:"2-144",sec:"2-5 その他の言語",term:"XHTML Modularization",
+   statement:"XHTML ModularizationはXHTMLの機能をモジュールに分割して管理する仕様で、用途や環境に合わせて必要なモジュールだけを組み合わせてXHTMLのプロファイルを定義できる柔軟な仕組みである。",
+   answer:true,
+   explanation:"その通りです。XHTML ModularizationはW3Cが策定した仕様で、XHTML Basicはこの仕組みを使ってモバイル向けの最小モジュールセットを定義しています。異なるデバイスや用途に応じたXHTMLプロファイル作成を可能にします。"},
+  {id:"2-145",sec:"2-5 その他の言語",term:"コンポジット構造図",
+   statement:"コンポジット構造図はUMLの図の一種でクラスやコンポーネントの内部構造と内部要素間の接続関係を詳細に示す図であり、複合的な構造を持つシステムの内部アーキテクチャの表現に使われる。",
+   answer:true,
+   explanation:"その通りです。コンポジット構造図はクラスの内部パーツ（Part）とその接続（Connector）を詳細に表現します。複雑なコンポーネントの内部設計を視覚化する際に有用なUML図です。"},
+  {id:"2-146",sec:"2-5 その他の言語",term:"DOM",
+   statement:"DOMツリーはブラウザがHTMLを解析して構築するオブジェクトのツリー構造で、JavaScriptはこのツリーを操作することでWebページのコンテンツを動的に変更できる。インタラクティブなWebページの実現に不可欠な技術である。",
+   answer:true,
+   explanation:"その通りです。ブラウザはHTMLをパースしてDOMツリーを構築します。JavaScriptはdocument.createElement・appendChild・removeChildなどのDOM APIでツリーを動的に操作します。現代のWebフレームワークはこのDOM操作を効率化しています。"}
+];
+
+const SECTIONS = ["2-1","2-2","2-3","2-4","2-5"];
+const CAT_ID="2",WEAK_KEY="fe_weak_v1",BEST_KEY="fe_best_"+CAT_ID;
+let currentQueue=[],currentIdx=0,sessionScore=0,sessionResults=[],lastMode='all';
+let selectedSecs=new Set();
+let weakMap=loadWeak();
+function loadWeak(){try{return JSON.parse(localStorage.getItem(WEAK_KEY))||{};}catch{return{};}}
+function saveWeak(){try{localStorage.setItem(WEAK_KEY,JSON.stringify(weakMap));}catch{}}
+function addWeak(q){if(!weakMap[q.id])weakMap[q.id]={term:q.term,count:0,statement:q.statement,cat:CAT_ID};weakMap[q.id].count++;saveWeak();}
+function clearWeak(){if(!confirm("このカテゴリの苦手記録を消去しますか？"))return;Object.keys(weakMap).filter(k=>weakMap[k].cat===CAT_ID).forEach(k=>delete weakMap[k]);saveWeak();updateStartStats();renderWeakList();}
+function getWeakForCat(){return Object.entries(weakMap).filter(([,v])=>v.cat===CAT_ID);}
+function getBest(){try{return JSON.parse(localStorage.getItem(BEST_KEY))||null;}catch{return null;}}
+function saveBest(score,total){const prev=getBest();if(!prev||score/total>prev.pct)localStorage.setItem(BEST_KEY,JSON.stringify({score,total,pct:score/total}));}
+function toggleSec(btn){
+  const s=btn.dataset.sec;
+  if(selectedSecs.has(s)){selectedSecs.delete(s);btn.classList.remove('active');}
+  else{selectedSecs.add(s);btn.classList.add('active');}
+}
+function updateStartStats(){const wc=getWeakForCat().length;document.getElementById('weak-count-stat').textContent=wc;document.getElementById('weak-mode-btn').disabled=wc===0;const best=getBest();document.getElementById('best-score-stat').textContent=best?`${best.score}/${best.total}`:'—';}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');if(name==='weak')renderWeakList();if(name==='start')updateStartStats();}
+function showTab(name){showView(name);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getPool(){
+  if(selectedSecs.size===0) return QUESTIONS;
+  return QUESTIONS.filter(q=>[...selectedSecs].some(s=>q.sec.startsWith(s)));
+}
+function startQuiz(mode){
+  lastMode=mode;let pool;
+  if(mode==='weak'){const wids=new Set(getWeakForCat().map(([k])=>k));pool=QUESTIONS.filter(q=>wids.has(q.id));}
+  else if(mode==='random'){pool=shuffle(getPool()).slice(0,10);}
+  else{pool=shuffle(getPool());}
+  if(!pool.length){alert("対象問題がありません");return;}
+  currentQueue=pool;currentIdx=0;sessionScore=0;sessionResults=[];
+  showView('quiz');renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQueue[currentIdx],total=currentQueue.length;
+  document.getElementById('quiz-progress').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('progress-fill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('q-term').textContent=q.term;
+  document.getElementById('q-section-tag').textContent=q.sec;
+  document.getElementById('q-statement').textContent=q.statement;
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('wrong-point').style.display='none';
+  document.getElementById('btn-maru').disabled=false;document.getElementById('btn-batsu').disabled=false;
+  document.getElementById('btn-maru').className='btn-circle correct-btn';
+  document.getElementById('btn-batsu').className='btn-circle wrong-btn';
+}
+function answer(userAnswer){
+  const q=currentQueue[currentIdx],isCorrect=(userAnswer===q.answer);
+  if(isCorrect)sessionScore++;else addWeak(q);
+  sessionResults.push({q,userAnswer,isCorrect});
+  const mb=document.getElementById('btn-maru'),bb=document.getElementById('btn-batsu');
+  mb.disabled=true;bb.disabled=true;
+  if(q.answer){mb.className='btn-circle correct-btn flash-correct';}else{bb.className='btn-circle wrong-btn flash-correct';}
+  if(userAnswer&&!isCorrect)mb.className='btn-circle correct-btn flash-wrong';
+  if(!userAnswer&&!isCorrect)bb.className='btn-circle wrong-btn flash-wrong';
+  const rc=document.getElementById('result-card');
+  rc.className='result-card '+(isCorrect?'correct-card':'wrong-card');rc.style.display='block';
+  document.getElementById('result-verdict').textContent=isCorrect?'✅ 正解！':'❌ 不正解';
+  document.getElementById('result-explanation').textContent=q.explanation;
+  if(!isCorrect&&q.wrongPoint){document.getElementById('wrong-point').style.display='block';document.getElementById('wrong-point-text').textContent=q.wrongPoint;}
+  document.getElementById('quiz-score-live').textContent=`正解 ${sessionScore}`;
+  document.getElementById('next-btn').style.display='block';
+  document.getElementById('next-btn').textContent=currentIdx+1<currentQueue.length?'次の問題 →':'結果を見る';
+}
+function nextQuestion(){currentIdx++;if(currentIdx>=currentQueue.length)showScore();else renderQuestion();}
+function showScore(){
+  const total=currentQueue.length,pct=Math.round(sessionScore/total*100);
+  saveBest(sessionScore,total);showView('score');
+  document.getElementById('score-ring').style.setProperty('--pct',pct);
+  document.getElementById('score-num').textContent=`${sessionScore}/${total}`;
+  document.getElementById('score-label').textContent=`正解率 ${pct}%`;
+  const msgs=[[100,'完璧です！🎉'],[80,'素晴らしい！✨'],[60,'もう少し！📖'],[0,'復習しよう💪']];
+  document.getElementById('score-message').textContent=msgs.find(([t])=>pct>=t)[1];
+  const wrongs=sessionResults.filter(r=>!r.isCorrect);
+  let html='';
+  if(wrongs.length){html=`<div class="wrong-summary"><div class="ws-title">間違えた問題（${wrongs.length}問）</div>`;wrongs.forEach(r=>{html+=`<div class="ws-item"><div class="ws-term">${r.q.term}</div><div class="ws-ans">あなた: ${r.userAnswer?'○':'×'} → 正解: ${r.q.answer?'○':'×'}</div></div>`;});html+='</div>';}
+  document.getElementById('wrong-summary').innerHTML=html;updateStartStats();
+}
+function renderWeakList(){
+  const body=document.getElementById('weak-list-body');
+  const entries=getWeakForCat().sort(([,a],[,b])=>b.count-a.count);
+  if(!entries.length){body.innerHTML='<div class="empty">苦手問題はまだありません 🎯</div>';return;}
+  body.innerHTML=entries.map(([id,w])=>`<div class="weak-item"><div class="wi-term">${w.term}</div><div class="wi-count">間違い ${w.count}回</div><div class="wi-stmt">${w.statement}</div></div>`).join('');
+}
+updateStartStats();
+</script>
+</body>
+</html>
